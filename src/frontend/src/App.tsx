@@ -199,6 +199,7 @@ function AppInner() {
   const [selectedWorkId, setSelectedWorkId] = useState("");
   const [selectedOrgId, setSelectedOrgId] = useState("");
 
+  // User is logged in when auth succeeded or when we have a restored identity
   const isLoggedIn =
     loginStatus === "success" || (loginStatus === "idle" && !!identity);
 
@@ -250,6 +251,22 @@ function AppInner() {
   }, []);
 
   const pageTitle = i18n.t(PAGE_TITLES[currentPage]);
+
+  // Show a neutral loading screen while the auth client initialises.
+  // This prevents the landing page from flashing before we know if the
+  // user is already logged in.
+  if (loginStatus === "initializing") {
+    return (
+      <div className="flex items-center justify-center h-screen bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-muted-foreground text-sm tracking-wide">
+            Loading DecibelChain…
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isLoggedIn) {
     if (currentPage === "certificateVerification") {

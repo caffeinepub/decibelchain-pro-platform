@@ -150,10 +150,8 @@ export function InternetIdentityProvider({
    */
   createOptions?: AuthClientCreateOptions;
 }>) {
+  // Use a ref so updating authClient does NOT trigger re-renders or effect re-runs
   const authClientRef = useRef<AuthClient | undefined>(undefined);
-  const [authClient, setAuthClient] = useState<AuthClient | undefined>(
-    undefined,
-  );
   const [identity, setIdentity] = useState<Identity | undefined>(undefined);
   const [loginStatus, setStatus] = useState<Status>("initializing");
   const [loginError, setError] = useState<Error | undefined>(undefined);
@@ -181,14 +179,15 @@ export function InternetIdentityProvider({
   );
 
   const login = useCallback(() => {
-    if (!authClient) {
+    const client = authClientRef.current;
+    if (!client) {
       setErrorMessage(
         "AuthClient is not initialized yet, make sure to call `login` on user interaction e.g. click.",
       );
       return;
     }
 
-    const currentIdentity = authClient.getIdentity();
+    const currentIdentity = client.getIdentity();
     if (
       !currentIdentity.getPrincipal().isAnonymous() &&
       currentIdentity instanceof DelegationIdentity &&
@@ -206,21 +205,21 @@ export function InternetIdentityProvider({
     };
 
     setStatus("logging-in");
-    void authClient.login(options);
-  }, [authClient, handleLoginError, handleLoginSuccess, setErrorMessage]);
+    void client.login(options);
+  }, [handleLoginError, handleLoginSuccess, setErrorMessage]);
 
   const clear = useCallback(() => {
-    if (!authClient) {
+    const client = authClientRef.current;
+    if (!client) {
       setErrorMessage("Auth client not initialized");
       return;
     }
 
-    void authClient
+    void client
       .logout()
       .then(() => {
         setIdentity(undefined);
         authClientRef.current = undefined;
-        setAuthClient(undefined);
         setStatus("idle");
         setError(undefined);
       })
@@ -232,48 +231,41 @@ export function InternetIdentityProvider({
             : new Error("Logout failed"),
         );
       });
-  }, [authClient, setErrorMessage]);
+  }, [setErrorMessage]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally runs once on mount; authClientRef is a ref (not state) so it must not be a dependency
   useEffect(() => {
     let cancelled = false;
     void (async () => {
       try {
-        if (!authClientRef.current) {
-          setStatus("initializing");
-        }
-        let existingClient = authClientRef.current;
-        if (!existingClient) {
-          existingClient = await createAuthClient(createOptions);
-          if (cancelled) return;
-          authClientRef.current = existingClient;
-          setAuthClient(existingClient);
-        }
-        const isAuthenticated = await existingClient.isAuthenticated();
+        setStatus("initializing");
+        const client = await createAuthClient(createOptions);
+        if (cancelled) return;
+        authClientRef.current = client;
+        const isAuthenticated = await client.isAuthenticated();
         if (cancelled) return;
         if (isAuthenticated) {
-          const loadedIdentity = existingClient.getIdentity();
+          const loadedIdentity = client.getIdentity();
           setIdentity(loadedIdentity);
           setStatus("success");
-          return;
+        } else {
+          setStatus("idle");
         }
       } catch (unknownError) {
-        setStatus("loginError");
-        setError(
-          unknownError instanceof Error
-            ? unknownError
-            : new Error("Initialization failed"),
-        );
-      } finally {
-        if (!cancelled)
-          setStatus((prev) =>
-            prev === "success" || prev === "loginError" ? prev : "idle",
+        if (!cancelled) {
+          setStatus("loginError");
+          setError(
+            unknownError instanceof Error
+              ? unknownError
+              : new Error("Initialization failed"),
           );
+        }
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [createOptions]);
+  }, []);
 
   const value = useMemo<ProviderValue>(
     () => ({
