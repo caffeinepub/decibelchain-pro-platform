@@ -14,6 +14,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { loadConfig } from "../config";
@@ -155,6 +156,7 @@ export function InternetIdentityProvider({
   const [identity, setIdentity] = useState<Identity | undefined>(undefined);
   const [loginStatus, setStatus] = useState<Status>("initializing");
   const [loginError, setError] = useState<Error | undefined>(undefined);
+  const hasLoggedInRef = useRef(false);
 
   const setErrorMessage = useCallback((message: string) => {
     setStatus("loginError");
@@ -167,6 +169,7 @@ export function InternetIdentityProvider({
       setErrorMessage("Identity not found after successful login");
       return;
     }
+    hasLoggedInRef.current = true;
     setIdentity(latestIdentity);
     setStatus("success");
   }, [authClient, setErrorMessage]);
@@ -213,6 +216,7 @@ export function InternetIdentityProvider({
       return;
     }
 
+    hasLoggedInRef.current = false;
     void authClient
       .logout()
       .then(() => {
@@ -256,7 +260,7 @@ export function InternetIdentityProvider({
             : new Error("Initialization failed"),
         );
       } finally {
-        if (!cancelled) setStatus("idle");
+        if (!cancelled && !hasLoggedInRef.current) setStatus("idle");
       }
     })();
     return () => {

@@ -1,5 +1,5 @@
 import { Toaster } from "@/components/ui/sonner";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Header } from "./components/Header";
 import { MobileBottomNav } from "./components/MobileBottomNav";
 import { Sidebar } from "./components/Sidebar";
@@ -141,9 +141,53 @@ const PAGE_TITLES: Record<Page, string> = {
   vendorPortal: "vendorPortal",
 };
 
+class PageErrorBoundary extends React.Component<
+  { onReset: () => void; children: React.ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { onReset: () => void; children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error("Page render error:", error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+          <div className="bg-card border border-border rounded-lg p-8 max-w-md">
+            <h2 className="text-xl font-semibold text-foreground mb-2">
+              Something went wrong
+            </h2>
+            <p className="text-muted-foreground mb-4 text-sm">
+              This page encountered an error. Your session is still active.
+            </p>
+            <button
+              type="button"
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:opacity-90"
+              onClick={() => {
+                this.setState({ hasError: false, error: null });
+                this.props.onReset();
+              }}
+            >
+              Go back to Dashboard
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function AppInner() {
   const i18n = useI18nState();
-  const { login, clear, isLoggingIn, loginStatus } = useInternetIdentity();
+  const { login, clear, isLoggingIn, loginStatus, identity } =
+    useInternetIdentity();
   const { actor, isFetching } = useActor();
   const { data: profile } = useMyProfile();
   const [currentPage, setCurrentPage] = useState<Page>("dashboard");
@@ -155,7 +199,8 @@ function AppInner() {
   const [selectedWorkId, setSelectedWorkId] = useState("");
   const [selectedOrgId, setSelectedOrgId] = useState("");
 
-  const isLoggedIn = loginStatus === "success";
+  const isLoggedIn =
+    loginStatus === "success" || (loginStatus === "idle" && !!identity);
 
   // Register user after login
   useEffect(() => {
@@ -274,116 +319,125 @@ function AppInner() {
             tabIndex={-1}
             className="flex-1 overflow-y-auto pb-16 lg:pb-0"
           >
-            <div key={currentPage} className="page-enter h-full">
-              {currentPage === "dashboard" && (
-                <Dashboard
-                  onNavigate={setCurrentPage}
-                  displayName={profile?.displayName || undefined}
-                />
-              )}
-              {currentPage === "organizations" && <Organizations />}
-              {currentPage === "creativeWorks" && <CreativeWorks />}
-              {currentPage === "ownershipSplits" && <OwnershipSplits />}
-              {currentPage === "vendorDirectory" && <VendorDirectory />}
-              {currentPage === "auditTrail" && <AuditTrail />}
-              {currentPage === "profile" && <Profile />}
-              {currentPage === "revenueDashboard" && <RevenueDashboard />}
-              {currentPage === "licensingManager" && <LicensingManager />}
-              {currentPage === "distributionStatements" && (
-                <DistributionStatements />
-              )}
-              {currentPage === "financingOffers" && <FinancingOffers />}
-              {currentPage === "investmentPortfolio" && <InvestmentPortfolio />}
-              {currentPage === "notificationsCenter" && <NotificationsCenter />}
-              {currentPage === "messages" && <Messages />}
-              {currentPage === "activityFeed" && <ActivityFeed />}
-              {currentPage === "memberDirectory" && (
-                <MemberDirectory
-                  onNavigate={setCurrentPage}
-                  onViewProfile={(id) => {
-                    setPublicProfileId(id);
-                    setCurrentPage("publicProfile");
-                  }}
-                />
-              )}
-              {currentPage === "reports" && <Reports />}
-              {currentPage === "crossOrgRoyalties" && <CrossOrgRoyalties />}
-              {currentPage === "intelligenceDashboard" && (
-                <IntelligenceDashboard />
-              )}
-              {currentPage === "searchResults" && (
-                <SearchResults
-                  query={searchQuery}
-                  onNavigate={setCurrentPage}
-                />
-              )}
-              {currentPage === "disputeCenter" && <DisputeCenter />}
-              {currentPage === "territoryManager" && <TerritoryManager />}
-              {currentPage === "performanceTracker" && <PerformanceTracker />}
-              {currentPage === "catalogValuation" && <CatalogValuation />}
-              {currentPage === "publicCatalog" && (
-                <PublicCatalog
-                  onNavigate={setCurrentPage}
-                  onSelectWork={(id) => {
-                    setSelectedWorkId(id);
-                    setCurrentPage("publicWorkDetail");
-                  }}
-                  onSelectOrg={(id) => {
-                    setSelectedOrgId(id);
-                    setCurrentPage("publicOrgDetail");
-                  }}
-                />
-              )}
-              {currentPage === "publicWorkDetail" && (
-                <PublicWorkDetail
-                  workId={selectedWorkId}
-                  onBack={() => setCurrentPage("publicCatalog")}
-                  onNavigate={setCurrentPage}
-                />
-              )}
-              {currentPage === "publicOrgDetail" && (
-                <PublicOrgDetail
-                  orgId={selectedOrgId}
-                  onBack={() => setCurrentPage("publicCatalog")}
-                  onSelectWork={(id) => {
-                    setSelectedWorkId(id);
-                    setCurrentPage("publicWorkDetail");
-                  }}
-                  onNavigate={setCurrentPage}
-                />
-              )}
-              {currentPage === "contractGenerator" && <ContractGenerator />}
-              {currentPage === "platformAdmin" && <PlatformAdmin />}
-              {currentPage === "apiKeyManager" && <ApiKeyManager />}
-              {currentPage === "webhookManager" && <WebhookManager />}
-              {currentPage === "dspLookup" && <DspLookup />}
-              {currentPage === "marketplaceAdmin" && <MarketplaceAdmin />}
-              {currentPage === "batchOperations" && <BatchOperations />}
-              {currentPage === "marketplaceListings" && (
-                <MarketplaceListings isAuthenticated={isLoggedIn} />
-              )}
-              {currentPage === "publicProfile" && (
-                <PublicProfile
-                  profilePrincipalId={publicProfileId}
-                  onBack={() => setCurrentPage("memberDirectory")}
-                />
-              )}
-              {currentPage === "certificates" && <Certificates />}
-              {currentPage === "certificateVerification" && (
-                <CertificateVerification
-                  onLogin={login}
-                  isAuthenticated={true}
-                />
-              )}
-              {currentPage === "helpCenter" && <HelpCenter />}
-              {currentPage === "tenantOnboarding" && (
-                <TenantOnboarding
-                  onNavigate={(p) => setCurrentPage(p as Page)}
-                />
-              )}
-              {currentPage === "brandingSettings" && <BrandingSettings />}
-              {currentPage === "vendorPortal" && <VendorPortal />}
-            </div>
+            <PageErrorBoundary
+              key={currentPage}
+              onReset={() => setCurrentPage("dashboard")}
+            >
+              <div className="page-enter h-full">
+                {currentPage === "dashboard" && (
+                  <Dashboard
+                    onNavigate={setCurrentPage}
+                    displayName={profile?.displayName || undefined}
+                  />
+                )}
+                {currentPage === "organizations" && <Organizations />}
+                {currentPage === "creativeWorks" && <CreativeWorks />}
+                {currentPage === "ownershipSplits" && <OwnershipSplits />}
+                {currentPage === "vendorDirectory" && <VendorDirectory />}
+                {currentPage === "auditTrail" && <AuditTrail />}
+                {currentPage === "profile" && <Profile />}
+                {currentPage === "revenueDashboard" && <RevenueDashboard />}
+                {currentPage === "licensingManager" && <LicensingManager />}
+                {currentPage === "distributionStatements" && (
+                  <DistributionStatements />
+                )}
+                {currentPage === "financingOffers" && <FinancingOffers />}
+                {currentPage === "investmentPortfolio" && (
+                  <InvestmentPortfolio />
+                )}
+                {currentPage === "notificationsCenter" && (
+                  <NotificationsCenter />
+                )}
+                {currentPage === "messages" && <Messages />}
+                {currentPage === "activityFeed" && <ActivityFeed />}
+                {currentPage === "memberDirectory" && (
+                  <MemberDirectory
+                    onNavigate={setCurrentPage}
+                    onViewProfile={(id) => {
+                      setPublicProfileId(id);
+                      setCurrentPage("publicProfile");
+                    }}
+                  />
+                )}
+                {currentPage === "reports" && <Reports />}
+                {currentPage === "crossOrgRoyalties" && <CrossOrgRoyalties />}
+                {currentPage === "intelligenceDashboard" && (
+                  <IntelligenceDashboard />
+                )}
+                {currentPage === "searchResults" && (
+                  <SearchResults
+                    query={searchQuery}
+                    onNavigate={setCurrentPage}
+                  />
+                )}
+                {currentPage === "disputeCenter" && <DisputeCenter />}
+                {currentPage === "territoryManager" && <TerritoryManager />}
+                {currentPage === "performanceTracker" && <PerformanceTracker />}
+                {currentPage === "catalogValuation" && <CatalogValuation />}
+                {currentPage === "publicCatalog" && (
+                  <PublicCatalog
+                    onNavigate={setCurrentPage}
+                    onSelectWork={(id) => {
+                      setSelectedWorkId(id);
+                      setCurrentPage("publicWorkDetail");
+                    }}
+                    onSelectOrg={(id) => {
+                      setSelectedOrgId(id);
+                      setCurrentPage("publicOrgDetail");
+                    }}
+                  />
+                )}
+                {currentPage === "publicWorkDetail" && (
+                  <PublicWorkDetail
+                    workId={selectedWorkId}
+                    onBack={() => setCurrentPage("publicCatalog")}
+                    onNavigate={setCurrentPage}
+                  />
+                )}
+                {currentPage === "publicOrgDetail" && (
+                  <PublicOrgDetail
+                    orgId={selectedOrgId}
+                    onBack={() => setCurrentPage("publicCatalog")}
+                    onSelectWork={(id) => {
+                      setSelectedWorkId(id);
+                      setCurrentPage("publicWorkDetail");
+                    }}
+                    onNavigate={setCurrentPage}
+                  />
+                )}
+                {currentPage === "contractGenerator" && <ContractGenerator />}
+                {currentPage === "platformAdmin" && <PlatformAdmin />}
+                {currentPage === "apiKeyManager" && <ApiKeyManager />}
+                {currentPage === "webhookManager" && <WebhookManager />}
+                {currentPage === "dspLookup" && <DspLookup />}
+                {currentPage === "marketplaceAdmin" && <MarketplaceAdmin />}
+                {currentPage === "batchOperations" && <BatchOperations />}
+                {currentPage === "marketplaceListings" && (
+                  <MarketplaceListings isAuthenticated={isLoggedIn} />
+                )}
+                {currentPage === "publicProfile" && (
+                  <PublicProfile
+                    profilePrincipalId={publicProfileId}
+                    onBack={() => setCurrentPage("memberDirectory")}
+                  />
+                )}
+                {currentPage === "certificates" && <Certificates />}
+                {currentPage === "certificateVerification" && (
+                  <CertificateVerification
+                    onLogin={login}
+                    isAuthenticated={true}
+                  />
+                )}
+                {currentPage === "helpCenter" && <HelpCenter />}
+                {currentPage === "tenantOnboarding" && (
+                  <TenantOnboarding
+                    onNavigate={(p) => setCurrentPage(p as Page)}
+                  />
+                )}
+                {currentPage === "brandingSettings" && <BrandingSettings />}
+                {currentPage === "vendorPortal" && <VendorPortal />}
+              </div>
+            </PageErrorBoundary>
           </main>
 
           {/* Mobile bottom navigation */}
