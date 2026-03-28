@@ -1,0 +1,222 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Bricolage Grotesque";
+  src: url("/assets/fonts/BricolageGrotesque.woff2") format("woff2");
+  font-weight: 200 800;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("/assets/fonts/Satoshi.woff2") format("woff2");
+  font-weight: 300 700;
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    --radius: 0.5rem;
+    --background: 0.13 0.025 258;
+    --foreground: 0.95 0.005 260;
+    --card: 0.17 0.03 258;
+    --card-foreground: 0.95 0.005 260;
+    --popover: 0.2 0.03 258;
+    --popover-foreground: 0.95 0.005 260;
+    --primary: 0.78 0.16 84;
+    --primary-foreground: 0.1 0.02 258;
+    --secondary: 0.22 0.03 258;
+    --secondary-foreground: 0.85 0.01 260;
+    --muted: 0.22 0.025 258;
+    --muted-foreground: 0.62 0.01 260;
+    --accent: 0.78 0.16 84;
+    --accent-foreground: 0.1 0.02 258;
+    --destructive: 0.62 0.22 25;
+    --destructive-foreground: 0.98 0 0;
+    --border: 0.28 0.03 255;
+    --input: 0.25 0.03 255;
+    --ring: 0.78 0.16 84;
+    --chart-1: 0.78 0.16 84;
+    --chart-2: 0.65 0.12 200;
+    --chart-3: 0.7 0.14 140;
+    --chart-4: 0.75 0.18 50;
+    --chart-5: 0.6 0.2 300;
+    --sidebar: 0.1 0.02 260;
+    --sidebar-foreground: 0.9 0.005 260;
+    --sidebar-primary: 0.78 0.16 84;
+    --sidebar-primary-foreground: 0.1 0.02 258;
+    --sidebar-accent: 0.18 0.03 258;
+    --sidebar-accent-foreground: 0.9 0.005 260;
+    --sidebar-border: 0.22 0.025 258;
+    --sidebar-ring: 0.78 0.16 84;
+    /* Brand accent – overridable at runtime via BrandingContext */
+    --brand-accent: #d4af37;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+/* ============================================================
+   Accessibility: Focus-visible rings
+   ============================================================ */
+*:focus-visible {
+  outline: 2px solid oklch(var(--ring));
+  outline-offset: 2px;
+  border-radius: var(--radius);
+}
+
+/* ============================================================
+   Smooth scrolling (respects prefers-reduced-motion)
+   ============================================================ */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* ============================================================
+   Reduced motion: disable all animations
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================
+   Page enter animation
+   ============================================================ */
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-enter {
+  animation: page-fade-in 0.2s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter {
+    animation: none;
+  }
+}
+
+/* ============================================================
+   Skeleton shimmer
+   ============================================================ */
+@keyframes skeleton-shimmer {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    oklch(var(--muted)) 25%,
+    oklch(var(--border)) 50%,
+    oklch(var(--muted)) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+}
+
+/* ============================================================
+   Card hover micro-animation
+   ============================================================ */
+.card-hover {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px oklch(0 0 0 / 0.3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-hover:hover {
+    transform: none;
+  }
+}
+
+/* ============================================================
+   Button press micro-animation
+   ============================================================ */
+.btn-press:active {
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-press:active {
+    transform: none;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: oklch(var(--background));
+}
+::-webkit-scrollbar-thumb {
+  background: oklch(var(--border));
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(var(--muted-foreground));
+}
+
+/* Gold shimmer animation */
+@keyframes gold-shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+.gold-shimmer {
+  background: linear-gradient(
+    90deg,
+    oklch(0.78 0.16 84),
+    oklch(0.9 0.2 84),
+    oklch(0.78 0.16 84)
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gold-shimmer 3s linear infinite;
+}
+
+/* Glow effect for primary elements */
+.glow-gold {
+  box-shadow: 0 0 20px oklch(0.78 0.16 84 / 0.3);
+}

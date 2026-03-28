@@ -1,0 +1,721 @@
+type http_request_result = 
+ record {
+   body: blob;
+   headers: vec http_header;
+   status: nat;
+ };
+type http_header = 
+ record {
+   name: text;
+   value: text;
+ };
+type _CaffeineStorageRefillResult = 
+ record {
+   success: opt bool;
+   topped_up_amount: opt nat;
+ };
+type _CaffeineStorageRefillInformation = record {
+                                           proposed_top_up_amount: opt nat;};
+type _CaffeineStorageCreateCertificateResult = 
+ record {
+   blob_hash: text;
+   method: text;
+ };
+type WorkType = 
+ variant {
+   album;
+   composition;
+   song;
+   soundRecording;
+ };
+type WorkLookupResult = 
+ record {
+   artists: vec text;
+   source: text;
+   title: text;
+   workType: text;
+ };
+type Vendor = 
+ record {
+   addedById: text;
+   contactEmail: text;
+   country: text;
+   createdAt: int;
+   id: text;
+   name: text;
+   orgId: text;
+   serviceType: ServiceType;
+   website: text;
+ };
+type ValuationConfig = 
+ record {
+   defaultMultiplierBps: nat;
+   lastUpdatedAt: int;
+   lastUpdatedBy: text;
+   pendingMultiplierBps: nat;
+   proposedAt: int;
+   proposedBy: text;
+ };
+type UserRole = 
+ variant {
+   admin;
+   guest;
+   user;
+ };
+type TransformationOutput = 
+ record {
+   body: blob;
+   headers: vec http_header;
+   status: nat;
+ };
+type TransformationInput = 
+ record {
+   context: blob;
+   response: http_request_result;
+ };
+type TerritoryRecord = 
+ record {
+   id: text;
+   notes: text;
+   orgId: text;
+   registeredAt: int;
+   registeredBy: text;
+   subPublisherId: text;
+   territoryCode: TerritoryCode;
+   workId: text;
+ };
+type TerritoryCode = 
+ variant {
+   africa;
+   asiaPacific;
+   custom: text;
+   europe;
+   latinAmerica;
+   middleEast;
+   northAmerica;
+   oceania;
+   world;
+ };
+type StatementStatus = 
+ variant {
+   draft;
+   finalized;
+   paid;
+ };
+type SetlistEntry = 
+ record {
+   durationSeconds: nat;
+   position: nat;
+   workId: text;
+ };
+type ServiceType = 
+ variant {
+   distribution;
+   legal;
+   licensing;
+   marketing;
+   publishing;
+   sync;
+ };
+type RevenueStats = 
+ record {
+   pendingPayoutsCents: nat;
+   statementCount: nat;
+   totalDistributedCents: nat;
+   totalRevenueCents: nat;
+ };
+type RevenueSource = 
+ record {
+   amountCents: nat;
+   createdAt: int;
+   createdBy: text;
+   currency: text;
+   description: text;
+   id: text;
+   orgId: text;
+   periodEnd: text;
+   periodStart: text;
+   sourceType: variant {
+                 digital;
+                 mechanical;
+                 other;
+                 performance;
+                 streaming;
+                 sync;
+               };
+   workId: text;
+ };
+type PostComment = 
+ record {
+   authorId: text;
+   authorName: text;
+   content: text;
+   createdAt: int;
+   id: text;
+   postId: text;
+ };
+type PerformanceType = 
+ variant {
+   broadcast;
+   concert;
+   festival;
+   other;
+   privateEvent;
+   streamingLive;
+ };
+type Performance = 
+ record {
+   createdAt: int;
+   createdBy: text;
+   id: text;
+   orgId: text;
+   performanceDate: text;
+   performanceType: PerformanceType;
+   promoter: text;
+   revenueSourceId: text;
+   setlist: vec SetlistEntry;
+   updatedAt: int;
+   venueCity: text;
+   venueCountry: text;
+   venueName: text;
+   verified: bool;
+   verifiedBy: text;
+ };
+type PayoutStatus = 
+ variant {
+   completed;
+   failed;
+   pending;
+   processing;
+ };
+type PayoutRecord = 
+ record {
+   amountCents: nat;
+   createdAt: int;
+   currency: text;
+   holderId: text;
+   id: text;
+   notes: text;
+   processedAt: int;
+   statementId: text;
+   status: PayoutStatus;
+ };
+type OwnershipSplit = 
+ record {
+   holderId: text;
+   percentage: nat;
+   role: text;
+   updatedAt: int;
+   workId: text;
+ };
+type Organization = 
+ record {
+   createdAt: int;
+   description: text;
+   id: text;
+   name: text;
+   orgType: OrgType;
+   owner: principal;
+ };
+type OrgType = 
+ variant {
+   cooperative;
+   indie;
+   publisher;
+   recordLabel;
+ };
+type OfferStatus = 
+ variant {
+   closed;
+   draft;
+   funded;
+   open;
+ };
+type Notification = 
+ record {
+   body: text;
+   createdAt: int;
+   entityId: text;
+   entityType: text;
+   id: text;
+   notifType: text;
+   read: bool;
+   recipientId: text;
+   title: text;
+ };
+type MemberProfile = 
+ record {
+   bio: text;
+   country: text;
+   createdAt: int;
+   displayName: text;
+   languages: vec text;
+   orgIds: vec text;
+   principalId: text;
+   updatedAt: int;
+   website: text;
+ };
+type MemberFollow = 
+ record {
+   createdAt: int;
+   followeeId: text;
+   followerId: text;
+ };
+type LineItem = 
+ record {
+   amountCents: nat;
+   holderId: text;
+   percentage: nat;
+ };
+type LicenseType = 
+ variant {
+   blanket;
+   master;
+   mechanical;
+   performance;
+   sync;
+ };
+type LicenseStatus = 
+ variant {
+   active;
+   expired;
+   pendingApproval;
+   rejected;
+   revoked;
+ };
+type LicenseRecord = 
+ record {
+   createdAt: int;
+   createdBy: text;
+   currency: text;
+   exclusivity: bool;
+   feeCents: nat;
+   id: text;
+   licenseType: LicenseType;
+   licenseeId: text;
+   notes: text;
+   orgId: text;
+   status: LicenseStatus;
+   termEnd: text;
+   termStart: text;
+   territory: text;
+   updatedAt: int;
+   workId: text;
+ };
+type InvestorCommitment = 
+ record {
+   commitmentAmountCents: nat;
+   confirmedAt: int;
+   createdAt: int;
+   currency: text;
+   id: text;
+   investorId: text;
+   notes: text;
+   offerId: text;
+   status: CommitmentStatus;
+ };
+type FinancingStats = 
+ record {
+   fundedOffersCount: nat;
+   openOffersCount: nat;
+   totalCommittedAmountCents: nat;
+   totalOffersCount: nat;
+   totalTargetAmountCents: nat;
+ };
+type FinancingOffer = 
+ record {
+   createdAt: int;
+   createdBy: text;
+   currency: text;
+   deadline: text;
+   dealStructure: DealStructure;
+   description: text;
+   id: text;
+   maxCommitmentCents: nat;
+   minCommitmentCents: nat;
+   offerPercentBps: nat;
+   orgId: text;
+   revenueShareBps: nat;
+   status: OfferStatus;
+   targetAmountCents: nat;
+   title: text;
+   updatedAt: int;
+   workId: text;
+ };
+type FinancingAdjustment = 
+ record {
+   entityId: text;
+   entityType: FinancingAdjEntityType;
+   fieldName: FinancingAdjFieldName;
+   id: text;
+   oldValue: nat;
+   proposedValue: nat;
+   reason: text;
+   requestedAt: int;
+   requestedBy: text;
+   reviewNotes: text;
+   reviewedAt: int;
+   reviewedBy: text;
+   status: AdjustmentStatus;
+ };
+type FinancingAdjFieldName = 
+ variant {
+   commitmentAmountCents;
+   offerPercentBps;
+   revenueShareBps;
+   targetAmountCents;
+ };
+type FinancingAdjEntityType = 
+ variant {
+   commitment;
+   financingOffer;
+ };
+type ExternalBlob = blob;
+type DistributionStatement = 
+ record {
+   createdAt: int;
+   createdBy: text;
+   currency: text;
+   finalizedAt: int;
+   id: text;
+   lineItems: vec LineItem;
+   orgId: text;
+   periodEnd: text;
+   periodStart: text;
+   status: StatementStatus;
+   totalAmountCents: nat;
+   workId: text;
+ };
+type DisputeStatus = 
+ variant {
+   awaitingResponse;
+   closed;
+   filed;
+   inReview;
+   rejected;
+   resolved;
+ };
+type DisputeCategory = 
+ variant {
+   financing;
+   license;
+   other;
+   royalty;
+   split;
+ };
+type Dispute = 
+ record {
+   adminNotes: text;
+   assignedAdmin: text;
+   category: DisputeCategory;
+   createdAt: int;
+   description: text;
+   filedBy: text;
+   id: text;
+   orgId: text;
+   proposedResolutionBy: text;
+   resolution: text;
+   resolvedAt: int;
+   status: DisputeStatus;
+   subject: text;
+   targetEntityId: text;
+   targetEntityType: text;
+   updatedAt: int;
+ };
+type DirectMessage = 
+ record {
+   content: text;
+   createdAt: int;
+   fromId: text;
+   id: text;
+   readByRecipient: bool;
+   toId: text;
+ };
+type DealStructure = 
+ variant {
+   cooperative;
+   newWaysNow;
+   standard;
+ };
+type CreativeWork = 
+ record {
+   createdAt: int;
+   creatorId: text;
+   description: text;
+   genre: text;
+   id: text;
+   isrc: text;
+   iswc: text;
+   orgId: text;
+   releaseDate: text;
+   thumbnail: opt ExternalBlob;
+   title: text;
+   updatedAt: int;
+   workType: WorkType;
+ };
+type ConversationSummary = 
+ record {
+   lastMessage: text;
+   lastMessageAt: int;
+   partnerId: text;
+   partnerName: text;
+   unreadCount: nat;
+ };
+type CommunityPost = 
+ record {
+   authorId: text;
+   authorName: text;
+   commentCount: nat;
+   content: text;
+   createdAt: int;
+   id: text;
+   likeCount: nat;
+   orgId: text;
+ };
+type CommitmentStatus = 
+ variant {
+   cancelled;
+   confirmed;
+   pending;
+   refunded;
+ };
+type CatalogValuation = 
+ record {
+   activeLicenseCount: nat;
+   createdAt: int;
+   createdBy: text;
+   estimatedValueCents: nat;
+   id: text;
+   multiplierBps: nat;
+   notes: text;
+   orgId: text;
+   snapshotDate: text;
+   totalDistributedCents: nat;
+   workCount: nat;
+ };
+type AuditEntry = 
+ record {
+   action: text;
+   actorId: text;
+   details: text;
+   entityId: text;
+   entityType: text;
+   id: nat;
+   timestamp: int;
+ };
+type AdjustmentStatus = 
+ variant {
+   approved;
+   pending;
+   rejected;
+ };
+type AdjustmentRequest = 
+ record {
+   entityId: text;
+   entityType: AdjustmentEntityType;
+   fieldName: AdjustmentFieldName;
+   id: text;
+   oldValue: nat;
+   proposedValue: nat;
+   reason: text;
+   requestedAt: int;
+   requestedBy: text;
+   reviewNotes: text;
+   reviewedAt: int;
+   reviewedBy: text;
+   status: AdjustmentStatus;
+ };
+type AdjustmentFieldName = 
+ variant {
+   amountCents;
+   feeCents;
+   percentage;
+ };
+type AdjustmentEntityType = 
+ variant {
+   license;
+   payout;
+   split;
+ };
+service : {
+  _caffeineStorageBlobIsLive: (hash: blob) -> (bool) query;
+  _caffeineStorageBlobsToDelete: () -> (vec blob) query;
+  _caffeineStorageConfirmBlobDeletion: (blobs: vec blob) -> ();
+  _caffeineStorageCreateCertificate: (blobHash: text) ->
+   (_CaffeineStorageCreateCertificateResult);
+  _caffeineStorageRefillCashier: (refillInformation:
+   opt _CaffeineStorageRefillInformation) -> (_CaffeineStorageRefillResult);
+  _caffeineStorageUpdateGatewayPrincipals: () -> ();
+  _initializeAccessControlWithSecret: (userSecret: text) -> ();
+  addComment: (postId: text, content: text) -> (PostComment);
+  addVendor: (name: text, serviceType: ServiceType, contactEmail: text,
+   website: text, country: text, orgId: text) -> (Vendor);
+  approveAdjustment: (id: text, reviewNotes: text) -> (opt AdjustmentRequest);
+  approveFinancingAdjustment: (id: text, reviewNotes: text) ->
+   (opt FinancingAdjustment);
+  approveLicense: (id: text) -> (opt LicenseRecord);
+  approveMultiplierChange: () -> (ValuationConfig);
+  assignCallerUserRole: (user: principal, role: UserRole) -> ();
+  assignDispute: (id: text, adminId: text) -> (opt Dispute);
+  closeDispute: (id: text, adminNotes: text) -> (opt Dispute);
+  commitToOffer: (offerId: text, commitmentAmountCents: nat, currency: 
+   text, notes: text) -> (InvestorCommitment);
+  createDistributionStatement: (orgId: text, workId: text, periodStart: 
+   text, periodEnd: text, currency: text) -> (DistributionStatement);
+  createFinancingOffer: (workId: text, orgId: text, title: text, description:
+   text, offerPercentBps: nat, targetAmountCents: nat, currency: text,
+   deadline: text, minCommitmentCents: nat, maxCommitmentCents: nat,
+   revenueShareBps: nat, dealStructure: DealStructure) -> (FinancingOffer);
+  createLicense: (workId: text, orgId: text, licenseType: LicenseType,
+   territory: text, termStart: text, termEnd: text, exclusivity: bool,
+   feeCents: nat, currency: text, licenseeId: text, notes: text) ->
+   (LicenseRecord);
+  createOrganization: (name: text, description: text, orgType: OrgType) ->
+   (Organization);
+  createPost: (orgId: text, content: text) -> (CommunityPost);
+  createRevenueSource: (orgId: text, workId: text, sourceType:
+   variant {
+     digital;
+     mechanical;
+     other;
+     performance;
+     streaming;
+     sync;
+   }, amountCents: nat, currency: text, periodStart: text, periodEnd: 
+   text, description: text) -> (RevenueSource);
+  createValuationSnapshot: (orgId: text, snapshotDate: text, notes: text) ->
+   (CatalogValuation);
+  expireLicense: (id: text) -> (opt LicenseRecord);
+  fileDispute: (orgId: text, category: DisputeCategory, subject: text,
+   description: text, targetEntityType: text, targetEntityId: text) ->
+   (Dispute);
+  finalizeStatement: (id: text) -> (opt DistributionStatement);
+  followMember: (followeeId: text) -> ();
+  getAuditByEntity: (entityType: text, entityId: text) ->
+   (vec AuditEntry) query;
+  getAuditLog: (offset: nat, limit: nat) -> (vec AuditEntry) query;
+  getCallerUserRole: () -> (UserRole) query;
+  getConversation: (partnerId: text, offset: nat, limit: nat) ->
+   (vec DirectMessage) query;
+  getDisputeById: (id: text) -> (opt Dispute) query;
+  getDisputes: () -> (vec Dispute) query;
+  getDisputesByOrg: (orgId: text) -> (vec Dispute) query;
+  getDistributionStatement: (id: text) -> (opt DistributionStatement) query;
+  getFinancingOffer: (id: text) -> (opt FinancingOffer) query;
+  getFinancingStats: (orgId: text) -> (FinancingStats) query;
+  getGlobalFeed: (offset: nat, limit: nat) -> (vec CommunityPost) query;
+  getInvestorCommitment: (id: text) -> (opt InvestorCommitment) query;
+  getLatestValuation: (orgId: text) -> (opt CatalogValuation) query;
+  getLicense: (id: text) -> (opt LicenseRecord) query;
+  getMembersInOrg: (orgId: text) -> (vec MemberProfile) query;
+  getMyConversations: () -> (vec ConversationSummary) query;
+  getMyFollowers: () -> (vec MemberFollow) query;
+  getMyFollowing: () -> (vec MemberFollow) query;
+  getMyNotifications: (offset: nat, limit: nat) -> (vec Notification) query;
+  getMyProfile: () -> (opt MemberProfile) query;
+  getOrgFeed: (orgId: text, offset: nat, limit: nat) ->
+   (vec CommunityPost) query;
+  getOrganization: (id: text) -> (opt Organization) query;
+  getPerformanceById: (id: text) -> (opt Performance) query;
+  getPerformancesByOrg: (orgId: text) -> (vec Performance) query;
+  getPostComments: (postId: text) -> (vec PostComment) query;
+  getProfile: (principalId: text) -> (opt MemberProfile) query;
+  getPublicWork: (id: text) -> (opt CreativeWork) query;
+  getRevenueStats: (orgId: text) -> (RevenueStats) query;
+  getSplitsByWork: (workId: text) -> (vec OwnershipSplit) query;
+  getTerritoriesByOrg: (orgId: text) -> (vec TerritoryRecord) query;
+  getTerritoriesByWork: (workId: text) -> (vec TerritoryRecord) query;
+  getUnreadNotificationCount: () -> (nat) query;
+  getValuationConfig: () -> (ValuationConfig) query;
+  getValuationHistory: (orgId: text) -> (vec CatalogValuation) query;
+  getVendorsByOrg: (orgId: text) -> (vec Vendor) query;
+  getWork: (id: text) -> (opt CreativeWork) query;
+  hasLikedPost: (postId: text, userId: text) -> (bool) query;
+  isCallerAdmin: () -> (bool) query;
+  isFollowing: (followerId: text, followeeId: text) -> (bool) query;
+  likePost: (postId: text) -> (bool);
+  linkPerformanceToRevenue: (id: text, revenueSourceId: text) ->
+   (opt Performance);
+  listAdjustmentsByEntity: (entityType: AdjustmentEntityType, entityId:
+   text) -> (vec AdjustmentRequest) query;
+  listAllMembers: () -> (vec MemberProfile) query;
+  listAllPerformances: () -> (vec Performance) query;
+  listAllTerritories: () -> (vec TerritoryRecord) query;
+  listAllValuations: () -> (vec CatalogValuation) query;
+  listAllVendors: () -> (vec Vendor) query;
+  listAllWorks: () -> (vec CreativeWork) query;
+  listCommitmentsByOffer: (offerId: text) -> (vec InvestorCommitment) query;
+  listFinancingAdjustmentsByEntity: (entityType: FinancingAdjEntityType,
+   entityId: text) -> (vec FinancingAdjustment) query;
+  listFinancingOffersByOrg: (orgId: text) -> (vec FinancingOffer) query;
+  listFinancingOffersByWork: (workId: text) -> (vec FinancingOffer) query;
+  listLicensesByOrg: (orgId: text) -> (vec LicenseRecord) query;
+  listLicensesByWork: (workId: text) -> (vec LicenseRecord) query;
+  listMyCommitments: () -> (vec InvestorCommitment) query;
+  listMyWorks: () -> (vec CreativeWork) query;
+  listOpenFinancingOffers: () -> (vec FinancingOffer) query;
+  listOrganizations: () -> (vec Organization) query;
+  listPayoutsByHolder: (holderId: text) -> (vec PayoutRecord) query;
+  listPayoutsByStatement: (statementId: text) -> (vec PayoutRecord) query;
+  listPendingAdjustments: () -> (vec AdjustmentRequest) query;
+  listPendingFinancingAdjustments: () -> (vec FinancingAdjustment) query;
+  listProfilesByOrg: (orgId: text) -> (vec MemberProfile) query;
+  listRevenueSourcesByOrg: (orgId: text) -> (vec RevenueSource) query;
+  listRevenueSourcesByWork: (workId: text) -> (vec RevenueSource) query;
+  listStatementsByOrg: (orgId: text) -> (vec DistributionStatement) query;
+  listStatementsByWork: (workId: text) -> (vec DistributionStatement) query;
+  listWorksByOrg: (orgId: text) -> (vec CreativeWork) query;
+  lookupISRC: (isrc: text) -> (WorkLookupResult);
+  lookupISWC: (iswc: text) -> (WorkLookupResult);
+  markAllNotificationsRead: () -> ();
+  markConversationRead: (partnerId: text) -> ();
+  markNotificationRead: (notifId: text) -> ();
+  proposeAdjustment: (entityType: AdjustmentEntityType, entityId: text,
+   fieldName: AdjustmentFieldName, oldValue: nat, proposedValue: nat, reason:
+   text) -> (AdjustmentRequest);
+  proposeDisputeResolution: (id: text, resolution: text) -> (opt Dispute);
+  proposeFinancingAdjustment: (entityType: FinancingAdjEntityType, entityId:
+   text, fieldName: FinancingAdjFieldName, oldValue: nat, proposedValue: 
+   nat, reason: text) -> (FinancingAdjustment);
+  proposeMultiplierChange: (newMultiplierBps: nat) -> (ValuationConfig);
+  registerPerformance: (orgId: text, venueName: text, venueCity: text,
+   venueCountry: text, performanceDate: text, performanceType:
+   PerformanceType, promoter: text, setlist: vec SetlistEntry) ->
+   (Performance);
+  registerTerritory: (workId: text, orgId: text, territoryCode:
+   TerritoryCode, subPublisherId: text, notes: text) -> (TerritoryRecord);
+  registerWork: (title: text, workType: WorkType, isrc: text, iswc: text,
+   genre: text, description: text, releaseDate: text, orgId: text) ->
+   (CreativeWork);
+  rejectAdjustment: (id: text, reviewNotes: text) -> (opt AdjustmentRequest);
+  rejectFinancingAdjustment: (id: text, reviewNotes: text) ->
+   (opt FinancingAdjustment);
+  rejectLicense: (id: text, reason: text) -> (opt LicenseRecord);
+  removeTerritory: (id: text) -> (bool);
+  resolveDispute: (id: text, resolution: text) -> (opt Dispute);
+  revokeLicense: (id: text, reason: text) -> (opt LicenseRecord);
+  sendMessage: (toId: text, content: text) -> (DirectMessage);
+  setSplit: (workId: text, holderId: text, percentage: nat, role: text) ->
+   (OwnershipSplit);
+  transform: (input: TransformationInput) -> (TransformationOutput) query;
+  unfollowMember: (followeeId: text) -> ();
+  updateCommitmentStatus: (id: text, newStatus: CommitmentStatus, notes:
+   text) -> (opt InvestorCommitment);
+  updateDisputeStatus: (id: text, status: DisputeStatus, adminNotes: 
+   text) -> (opt Dispute);
+  updateFinancingOfferStatus: (id: text, newStatus: OfferStatus, notes:
+   text) -> (opt FinancingOffer);
+  updateOrganization: (id: text, name: text, description: text, orgType:
+   OrgType) -> (opt Organization);
+  updatePayoutStatus: (id: text, status: PayoutStatus, notes: text) ->
+   (opt PayoutRecord);
+  updatePerformanceSetlist: (id: text, setlist: vec SetlistEntry) ->
+   (opt Performance);
+  updateTerritory: (id: text, subPublisherId: text, notes: text) ->
+   (opt TerritoryRecord);
+  updateWork: (id: text, title: text, genre: text, description: text,
+   releaseDate: text) -> (opt CreativeWork);
+  upsertProfile: (displayName: text, bio: text, country: text, website: 
+   text, languages: vec text, orgIds: vec text) -> (MemberProfile);
+  verifyPerformance: (id: text) -> (opt Performance);
+}

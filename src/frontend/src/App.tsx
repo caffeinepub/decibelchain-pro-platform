@@ -1,0 +1,422 @@
+import { Toaster } from "@/components/ui/sonner";
+import { useEffect, useState } from "react";
+import { Header } from "./components/Header";
+import { MobileBottomNav } from "./components/MobileBottomNav";
+import { Sidebar } from "./components/Sidebar";
+import { BrandingProvider } from "./contexts/BrandingContext";
+import { useActor } from "./hooks/useActor";
+import { useInternetIdentity } from "./hooks/useInternetIdentity";
+import { useMyProfile } from "./hooks/useQueries";
+import { I18nContext, useI18nState } from "./i18n";
+import { ActivityFeed } from "./pages/ActivityFeed";
+import { ApiKeyManager } from "./pages/ApiKeyManager";
+import { AuditTrail } from "./pages/AuditTrail";
+import BatchOperations from "./pages/BatchOperations";
+import { BrandingSettings } from "./pages/BrandingSettings";
+import { CatalogValuation } from "./pages/CatalogValuation";
+import { CertificateVerification } from "./pages/CertificateVerification";
+import { Certificates } from "./pages/Certificates";
+import { ContractGenerator } from "./pages/ContractGenerator";
+import { CreativeWorks } from "./pages/CreativeWorks";
+import { CrossOrgRoyalties } from "./pages/CrossOrgRoyalties";
+import { Dashboard } from "./pages/Dashboard";
+import { DisputeCenter } from "./pages/DisputeCenter";
+import { DistributionStatements } from "./pages/DistributionStatements";
+import { DspLookup } from "./pages/DspLookup";
+import { FinancingOffers } from "./pages/FinancingOffers";
+import { HelpCenter } from "./pages/HelpCenter";
+import { IntelligenceDashboard } from "./pages/IntelligenceDashboard";
+import { InvestmentPortfolio } from "./pages/InvestmentPortfolio";
+import { LandingPage } from "./pages/LandingPage";
+import { LicensingManager } from "./pages/LicensingManager";
+import { MarketplaceAdmin } from "./pages/MarketplaceAdmin";
+import { MarketplaceListings } from "./pages/MarketplaceListings";
+import { MemberDirectory } from "./pages/MemberDirectory";
+import { Messages } from "./pages/Messages";
+import { NotificationsCenter } from "./pages/NotificationsCenter";
+import { Organizations } from "./pages/Organizations";
+import { OwnershipSplits } from "./pages/OwnershipSplits";
+import { PerformanceTracker } from "./pages/PerformanceTracker";
+import { PlatformAdmin } from "./pages/PlatformAdmin";
+import { Profile } from "./pages/Profile";
+import { PublicCatalog } from "./pages/PublicCatalog";
+import { PublicOrgDetail } from "./pages/PublicOrgDetail";
+import { PublicProfile } from "./pages/PublicProfile";
+import { PublicWorkDetail } from "./pages/PublicWorkDetail";
+import { Reports } from "./pages/Reports";
+import { RevenueDashboard } from "./pages/RevenueDashboard";
+import { SearchResults } from "./pages/SearchResults";
+import { TenantOnboarding } from "./pages/TenantOnboarding";
+import { TerritoryManager } from "./pages/TerritoryManager";
+import { VendorDirectory } from "./pages/VendorDirectory";
+import { VendorPortal } from "./pages/VendorPortal";
+import { WebhookManager } from "./pages/WebhookManager";
+
+export type Page =
+  | "dashboard"
+  | "organizations"
+  | "creativeWorks"
+  | "ownershipSplits"
+  | "vendorDirectory"
+  | "auditTrail"
+  | "profile"
+  | "revenueDashboard"
+  | "distributionStatements"
+  | "licensingManager"
+  | "financingOffers"
+  | "investmentPortfolio"
+  | "notificationsCenter"
+  | "messages"
+  | "activityFeed"
+  | "memberDirectory"
+  | "reports"
+  | "searchResults"
+  | "publicProfile"
+  | "disputeCenter"
+  | "territoryManager"
+  | "performanceTracker"
+  | "catalogValuation"
+  | "publicCatalog"
+  | "publicWorkDetail"
+  | "publicOrgDetail"
+  | "contractGenerator"
+  | "intelligenceDashboard"
+  | "crossOrgRoyalties"
+  | "platformAdmin"
+  | "apiKeyManager"
+  | "webhookManager"
+  | "dspLookup"
+  | "marketplaceListings"
+  | "marketplaceAdmin"
+  | "batchOperations"
+  | "certificates"
+  | "certificateVerification"
+  | "helpCenter"
+  | "tenantOnboarding"
+  | "brandingSettings"
+  | "vendorPortal";
+
+const PAGE_TITLES: Record<Page, string> = {
+  dashboard: "dashboard",
+  organizations: "organizations",
+  creativeWorks: "creativeWorks",
+  ownershipSplits: "ownershipSplits",
+  vendorDirectory: "vendorDirectory",
+  auditTrail: "auditTrail",
+  profile: "profile",
+  revenueDashboard: "revenueDashboard",
+  distributionStatements: "distributionStatements",
+  licensingManager: "licensingManager",
+  financingOffers: "financingOffers",
+  investmentPortfolio: "investmentPortfolio",
+  notificationsCenter: "notificationsCenter",
+  messages: "messages",
+  activityFeed: "activityFeed",
+  memberDirectory: "memberDirectory",
+  reports: "reports",
+  searchResults: "searchResults",
+  publicProfile: "publicProfile",
+  disputeCenter: "disputeCenter",
+  territoryManager: "territoryManager",
+  performanceTracker: "performanceTracker",
+  catalogValuation: "catalogValuation",
+  publicCatalog: "publicCatalog",
+  publicWorkDetail: "publicWorkDetail",
+  publicOrgDetail: "publicOrgDetail",
+  contractGenerator: "contractGenerator",
+  intelligenceDashboard: "intelligenceDashboard",
+  crossOrgRoyalties: "crossOrgRoyalties",
+  platformAdmin: "platformAdmin",
+  apiKeyManager: "apiKeyManager",
+  webhookManager: "webhookManager",
+  dspLookup: "dspLookup",
+  marketplaceListings: "marketplaceListings",
+  marketplaceAdmin: "marketplaceAdmin",
+  batchOperations: "batchOperations",
+  certificates: "certificates",
+  certificateVerification: "certificateVerification",
+  helpCenter: "helpCenter",
+  tenantOnboarding: "tenantOnboarding",
+  brandingSettings: "brandingSettings",
+  vendorPortal: "vendorPortal",
+};
+
+function AppInner() {
+  const i18n = useI18nState();
+  const { login, clear, isLoggingIn, loginStatus } = useInternetIdentity();
+  const { actor, isFetching } = useActor();
+  const { data: profile } = useMyProfile();
+  const [currentPage, setCurrentPage] = useState<Page>("dashboard");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [registered, setRegistered] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [publicProfileId, setPublicProfileId] = useState("");
+  const [selectedWorkId, setSelectedWorkId] = useState("");
+  const [selectedOrgId, setSelectedOrgId] = useState("");
+
+  const isLoggedIn = loginStatus === "success";
+
+  // Register user after login
+  useEffect(() => {
+    if (isLoggedIn && actor && !isFetching && !registered) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (actor as any)
+        .registerUser()
+        .then(() => setRegistered(true))
+        .catch(() => setRegistered(true));
+    }
+  }, [isLoggedIn, actor, isFetching, registered]);
+
+  // Swipe-right-from-left-edge to open mobile sidebar
+  useEffect(() => {
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      const dy = Math.abs(e.changedTouches[0].clientY - touchStartY);
+      if (touchStartX < 30 && dx > 60 && dy < 80) {
+        setMobileSidebarOpen(true);
+      }
+    };
+
+    document.addEventListener("touchstart", handleTouchStart, {
+      passive: true,
+    });
+    document.addEventListener("touchend", handleTouchEnd, { passive: true });
+    return () => {
+      document.removeEventListener("touchstart", handleTouchStart);
+      document.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, []);
+
+  // Auto-route to certificate verification if ?verify= param present
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("verify")) {
+      setCurrentPage("certificateVerification");
+    }
+  }, []);
+
+  const pageTitle = i18n.t(PAGE_TITLES[currentPage]);
+
+  if (!isLoggedIn) {
+    if (currentPage === "certificateVerification") {
+      return (
+        <I18nContext.Provider value={i18n}>
+          <CertificateVerification onLogin={login} />
+          <Toaster />
+        </I18nContext.Provider>
+      );
+    }
+    return (
+      <I18nContext.Provider value={i18n}>
+        <LandingPage onLogin={login} isLoggingIn={isLoggingIn} />
+        <Toaster />
+      </I18nContext.Provider>
+    );
+  }
+
+  return (
+    <I18nContext.Provider value={i18n}>
+      {/* Skip to main content – visible on keyboard focus */}
+      <a
+        href="#main-content"
+        className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:top-4 focus-visible:left-4 focus-visible:z-[100] focus-visible:px-4 focus-visible:py-2 focus-visible:bg-primary focus-visible:text-primary-foreground focus-visible:rounded-md focus-visible:font-medium focus-visible:text-sm"
+      >
+        Skip to main content
+      </a>
+
+      <div className="flex h-screen bg-background overflow-hidden">
+        {/* Desktop sidebar */}
+        <Sidebar
+          currentPage={currentPage}
+          onNavigate={setCurrentPage}
+          onLogout={clear}
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed((v) => !v)}
+          displayName={profile?.displayName || undefined}
+        />
+
+        {/* Mobile sidebar */}
+        <Sidebar
+          currentPage={currentPage}
+          onNavigate={setCurrentPage}
+          onLogout={clear}
+          collapsed={false}
+          onToggleCollapse={() => {}}
+          displayName={profile?.displayName || undefined}
+          isMobile
+          mobileOpen={mobileSidebarOpen}
+          onMobileClose={() => setMobileSidebarOpen(false)}
+        />
+
+        {/* Main content */}
+        <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+          <Header
+            title={pageTitle}
+            onMobileMenuOpen={() => setMobileSidebarOpen(true)}
+            onNavigate={setCurrentPage}
+            onSearch={(q) => {
+              setSearchQuery(q);
+              setCurrentPage("searchResults");
+            }}
+          />
+          <main
+            id="main-content"
+            aria-label="Main content"
+            tabIndex={-1}
+            className="flex-1 overflow-y-auto pb-16 lg:pb-0"
+          >
+            <div key={currentPage} className="page-enter h-full">
+              {currentPage === "dashboard" && (
+                <Dashboard
+                  onNavigate={setCurrentPage}
+                  displayName={profile?.displayName || undefined}
+                />
+              )}
+              {currentPage === "organizations" && <Organizations />}
+              {currentPage === "creativeWorks" && <CreativeWorks />}
+              {currentPage === "ownershipSplits" && <OwnershipSplits />}
+              {currentPage === "vendorDirectory" && <VendorDirectory />}
+              {currentPage === "auditTrail" && <AuditTrail />}
+              {currentPage === "profile" && <Profile />}
+              {currentPage === "revenueDashboard" && <RevenueDashboard />}
+              {currentPage === "licensingManager" && <LicensingManager />}
+              {currentPage === "distributionStatements" && (
+                <DistributionStatements />
+              )}
+              {currentPage === "financingOffers" && <FinancingOffers />}
+              {currentPage === "investmentPortfolio" && <InvestmentPortfolio />}
+              {currentPage === "notificationsCenter" && <NotificationsCenter />}
+              {currentPage === "messages" && <Messages />}
+              {currentPage === "activityFeed" && <ActivityFeed />}
+              {currentPage === "memberDirectory" && (
+                <MemberDirectory
+                  onNavigate={setCurrentPage}
+                  onViewProfile={(id) => {
+                    setPublicProfileId(id);
+                    setCurrentPage("publicProfile");
+                  }}
+                />
+              )}
+              {currentPage === "reports" && <Reports />}
+              {currentPage === "crossOrgRoyalties" && <CrossOrgRoyalties />}
+              {currentPage === "intelligenceDashboard" && (
+                <IntelligenceDashboard />
+              )}
+              {currentPage === "searchResults" && (
+                <SearchResults
+                  query={searchQuery}
+                  onNavigate={setCurrentPage}
+                />
+              )}
+              {currentPage === "disputeCenter" && <DisputeCenter />}
+              {currentPage === "territoryManager" && <TerritoryManager />}
+              {currentPage === "performanceTracker" && <PerformanceTracker />}
+              {currentPage === "catalogValuation" && <CatalogValuation />}
+              {currentPage === "publicCatalog" && (
+                <PublicCatalog
+                  onNavigate={setCurrentPage}
+                  onSelectWork={(id) => {
+                    setSelectedWorkId(id);
+                    setCurrentPage("publicWorkDetail");
+                  }}
+                  onSelectOrg={(id) => {
+                    setSelectedOrgId(id);
+                    setCurrentPage("publicOrgDetail");
+                  }}
+                />
+              )}
+              {currentPage === "publicWorkDetail" && (
+                <PublicWorkDetail
+                  workId={selectedWorkId}
+                  onBack={() => setCurrentPage("publicCatalog")}
+                  onNavigate={setCurrentPage}
+                />
+              )}
+              {currentPage === "publicOrgDetail" && (
+                <PublicOrgDetail
+                  orgId={selectedOrgId}
+                  onBack={() => setCurrentPage("publicCatalog")}
+                  onSelectWork={(id) => {
+                    setSelectedWorkId(id);
+                    setCurrentPage("publicWorkDetail");
+                  }}
+                  onNavigate={setCurrentPage}
+                />
+              )}
+              {currentPage === "contractGenerator" && <ContractGenerator />}
+              {currentPage === "platformAdmin" && <PlatformAdmin />}
+              {currentPage === "apiKeyManager" && <ApiKeyManager />}
+              {currentPage === "webhookManager" && <WebhookManager />}
+              {currentPage === "dspLookup" && <DspLookup />}
+              {currentPage === "marketplaceAdmin" && <MarketplaceAdmin />}
+              {currentPage === "batchOperations" && <BatchOperations />}
+              {currentPage === "marketplaceListings" && (
+                <MarketplaceListings isAuthenticated={isLoggedIn} />
+              )}
+              {currentPage === "publicProfile" && (
+                <PublicProfile
+                  profilePrincipalId={publicProfileId}
+                  onBack={() => setCurrentPage("memberDirectory")}
+                />
+              )}
+              {currentPage === "certificates" && <Certificates />}
+              {currentPage === "certificateVerification" && (
+                <CertificateVerification
+                  onLogin={login}
+                  isAuthenticated={true}
+                />
+              )}
+              {currentPage === "helpCenter" && <HelpCenter />}
+              {currentPage === "tenantOnboarding" && (
+                <TenantOnboarding
+                  onNavigate={(p) => setCurrentPage(p as Page)}
+                />
+              )}
+              {currentPage === "brandingSettings" && <BrandingSettings />}
+              {currentPage === "vendorPortal" && <VendorPortal />}
+            </div>
+          </main>
+
+          {/* Mobile bottom navigation */}
+          <MobileBottomNav
+            currentPage={currentPage}
+            onNavigate={setCurrentPage}
+            onMoreOpen={() => setMobileSidebarOpen(true)}
+            unreadCount={0}
+          />
+
+          {/* Footer */}
+          <footer className="py-2 px-4 text-center text-xs text-muted-foreground/40 border-t border-border/30">
+            © {new Date().getFullYear()}.{" "}
+            <a
+              href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-muted-foreground transition-colors"
+            >
+              Built with ♥ using caffeine.ai
+            </a>
+          </footer>
+        </div>
+      </div>
+      <Toaster />
+    </I18nContext.Provider>
+  );
+}
+
+export default function App() {
+  return (
+    <BrandingProvider>
+      <AppInner />
+    </BrandingProvider>
+  );
+}
