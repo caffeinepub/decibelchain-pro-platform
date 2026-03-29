@@ -665,4 +665,10 @@ export interface backendInterface {
     }>;
     listApprovalProposals(): Promise<Array<MarketplaceApprovalProposal>>;
     listAllLicenseRequests(): Promise<Array<LicenseRequest>>;
+    seedAdminPrincipal(principalText: string): Promise<{ __kind__: "ok"; ok: string } | { __kind__: "err"; err: string }>;
+    hasAdminBeenSeeded(): Promise<boolean>;
+    listAdmins(): Promise<Array<string>>;
+    promoteToAdmin(principalText: string): Promise<{ __kind__: "ok"; ok: string } | { __kind__: "err"; err: string }>;
+    demoteAdmin(principalText: string): Promise<{ __kind__: "ok"; ok: string } | { __kind__: "err"; err: string }>;
+    registerUser(): Promise<void>;
 }

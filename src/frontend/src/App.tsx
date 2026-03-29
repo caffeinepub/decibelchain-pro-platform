@@ -9,6 +9,7 @@ import { useInternetIdentity } from "./hooks/useInternetIdentity";
 import { useMyProfile } from "./hooks/useQueries";
 import { I18nContext, useI18nState } from "./i18n";
 import { ActivityFeed } from "./pages/ActivityFeed";
+import { AdminSetup } from "./pages/AdminSetup";
 import { ApiKeyManager } from "./pages/ApiKeyManager";
 import { AuditTrail } from "./pages/AuditTrail";
 import BatchOperations from "./pages/BatchOperations";
@@ -94,7 +95,8 @@ export type Page =
   | "helpCenter"
   | "tenantOnboarding"
   | "brandingSettings"
-  | "vendorPortal";
+  | "vendorPortal"
+  | "adminSetup";
 
 const PAGE_TITLES: Record<Page, string> = {
   dashboard: "dashboard",
@@ -139,6 +141,7 @@ const PAGE_TITLES: Record<Page, string> = {
   tenantOnboarding: "tenantOnboarding",
   brandingSettings: "brandingSettings",
   vendorPortal: "vendorPortal",
+  adminSetup: "adminSetup",
 };
 
 class PageErrorBoundary extends React.Component<
@@ -186,8 +189,7 @@ class PageErrorBoundary extends React.Component<
 
 function AppInner() {
   const i18n = useI18nState();
-  const { login, clear, isLoggingIn, loginStatus, identity } =
-    useInternetIdentity();
+  const { login, clear, loginStatus, identity } = useInternetIdentity();
   const { actor, isFetching } = useActor();
   const { data: profile } = useMyProfile();
   const [currentPage, setCurrentPage] = useState<Page>("dashboard");
@@ -268,23 +270,6 @@ function AppInner() {
     );
   }
 
-  if (!isLoggedIn) {
-    if (currentPage === "certificateVerification") {
-      return (
-        <I18nContext.Provider value={i18n}>
-          <CertificateVerification onLogin={login} />
-          <Toaster />
-        </I18nContext.Provider>
-      );
-    }
-    return (
-      <I18nContext.Provider value={i18n}>
-        <LandingPage onLogin={login} isLoggingIn={isLoggingIn} />
-        <Toaster />
-      </I18nContext.Provider>
-    );
-  }
-
   return (
     <I18nContext.Provider value={i18n}>
       {/* Skip to main content – visible on keyboard focus */}
@@ -304,6 +289,8 @@ function AppInner() {
           collapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed((v) => !v)}
           displayName={profile?.displayName || undefined}
+          isLoggedIn={isLoggedIn}
+          onLogin={login}
         />
 
         {/* Mobile sidebar */}
@@ -317,6 +304,8 @@ function AppInner() {
           isMobile
           mobileOpen={mobileSidebarOpen}
           onMobileClose={() => setMobileSidebarOpen(false)}
+          isLoggedIn={isLoggedIn}
+          onLogin={login}
         />
 
         {/* Main content */}
@@ -453,6 +442,7 @@ function AppInner() {
                 )}
                 {currentPage === "brandingSettings" && <BrandingSettings />}
                 {currentPage === "vendorPortal" && <VendorPortal />}
+                {currentPage === "adminSetup" && <AdminSetup />}
               </div>
             </PageErrorBoundary>
           </main>

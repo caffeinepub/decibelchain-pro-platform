@@ -20,6 +20,7 @@ import {
   Layers,
   LayoutDashboard,
   LineChart,
+  LogIn,
   LogOut,
   Menu,
   MessageCircle,
@@ -33,6 +34,7 @@ import {
   Scale,
   ScrollText,
   Search,
+  Settings,
   Shield,
   ShieldCheck,
   ShoppingBag,
@@ -58,7 +60,15 @@ interface SidebarProps {
   isMobile?: boolean;
   mobileOpen?: boolean;
   onMobileClose?: () => void;
+  isLoggedIn?: boolean;
+  onLogin?: () => void;
 }
+
+const setupNavItems: {
+  page: Page;
+  icon: React.ComponentType<{ className?: string }>;
+  key: string;
+}[] = [{ page: "adminSetup", icon: Settings, key: "adminSetup" }];
 
 const navItems: {
   page: Page;
@@ -224,6 +234,8 @@ export function Sidebar({
   isMobile,
   mobileOpen,
   onMobileClose,
+  isLoggedIn = false,
+  onLogin,
 }: SidebarProps) {
   const { t } = useTranslation();
   const { actor, isFetching } = useActor();
@@ -642,6 +654,22 @@ export function Sidebar({
         )}
       </nav>
 
+      {/* Setup section */}
+      {(!collapsed || isMobile) && (
+        <p className="px-3 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground/50">
+          Setup
+        </p>
+      )}
+      <NavSection
+        items={setupNavItems}
+        currentPage={currentPage}
+        onNavigate={onNavigate}
+        onMobileClose={onMobileClose}
+        collapsed={collapsed}
+        isMobile={isMobile}
+        t={t}
+      />
+
       {/* User / logout */}
       <div
         className={cn(
@@ -649,23 +677,40 @@ export function Sidebar({
           collapsed && !isMobile && "flex justify-center",
         )}
       >
-        {(!collapsed || isMobile) && displayName && (
-          <p className="text-xs text-muted-foreground mb-2 px-1 truncate">
-            {displayName}
-          </p>
+        {isLoggedIn ? (
+          <>
+            {(!collapsed || isMobile) && displayName && (
+              <p className="text-xs text-muted-foreground mb-2 px-1 truncate">
+                {displayName}
+              </p>
+            )}
+            <button
+              type="button"
+              data-ocid="nav.logout.button"
+              onClick={onLogout}
+              className={cn(
+                "w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all",
+                collapsed && !isMobile && "justify-center",
+              )}
+            >
+              <LogOut className="w-4 h-4 flex-shrink-0" />
+              {(!collapsed || isMobile) && <span>{t("logout")}</span>}
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            data-ocid="nav.signin.button"
+            onClick={onLogin}
+            className={cn(
+              "w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-primary bg-primary/10 hover:bg-primary/20 border border-primary/30 transition-all",
+              collapsed && !isMobile && "justify-center",
+            )}
+          >
+            <LogIn className="w-4 h-4 flex-shrink-0" />
+            {(!collapsed || isMobile) && <span>Sign In</span>}
+          </button>
         )}
-        <button
-          type="button"
-          data-ocid="nav.logout.button"
-          onClick={onLogout}
-          className={cn(
-            "w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all",
-            collapsed && !isMobile && "justify-center",
-          )}
-        >
-          <LogOut className="w-4 h-4 flex-shrink-0" />
-          {(!collapsed || isMobile) && <span>{t("logout")}</span>}
-        </button>
       </div>
     </div>
   );

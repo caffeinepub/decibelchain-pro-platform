@@ -1478,4 +1478,79 @@ persistent actor {
     licenseRequests.values().toArray();
   };
 
+  // ========== ADMIN SETUP & MANAGEMENT ==========
+  // Seed the very first admin by principal ID - only works when no admin has been assigned yet.
+  // After the first admin is set, this becomes a no-op (bootstrap protection).
+  public shared func seedAdminPrincipal(principalText : Text) : async { #ok : Text; #err : Text } {
+    if (accessControlState.adminAssigned) {
+      return #err("An admin already exists. Use promoteToAdmin from an existing admin account.");
+    };
+    let p = Principal.fromText(principalText);
+    if (p.isAnonymous()) {
+      return #err("Cannot grant admin to anonymous principal");
+    };
+    accessControlState.userRoles.add(p, #admin);
+    accessControlState.adminAssigned := true;
+    addAudit("setup", "seedAdminPrincipal", "user", principalText, "Bootstrap admin set");
+    #ok("Admin status granted to " # principalText);
+  };
+
+  // Returns true if at least one admin has been designated.
+  public query func hasAdminBeenSeeded() : async Bool {
+    accessControlState.adminAssigned;
+  };
+
+  // List all admin principal IDs (public so the setup screen can display them).
+  public query func listAdmins() : async [Text] {
+    let admins = accessControlState.userRoles.entries()
+      .toArray()
+      .filter(func(entry : (Principal, AccessControl.UserRole)) : Bool {
+        entry.1 == #admin
+      })
+      .map(func(entry : (Principal, AccessControl.UserRole)) : Text {
+        entry.0.toText()
+      });
+    admins;
+  };
+
+  // Promote any registered or unregistered principal to admin (admin-only).
+  public shared ({ caller }) func promoteToAdmin(principalText : Text) : async { #ok : Text; #err : Text } {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      return #err("Unauthorized: Only admins can promote others");
+    };
+    let p = Principal.fromText(principalText);
+    if (p.isAnonymous()) {
+      return #err("Cannot grant admin to anonymous principal");
+    };
+    accessControlState.userRoles.add(p, #admin);
+    addAudit(caller.toText(), "promoteToAdmin", "user", principalText, "Promoted to admin");
+    #ok("Admin status granted to " # principalText);
+  };
+
+  // Demote an admin to regular user (admin-only, cannot demote yourself).
+  public shared ({ caller }) func demoteAdmin(principalText : Text) : async { #ok : Text; #err : Text } {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      return #err("Unauthorized: Only admins can demote others");
+    };
+    if (caller.toText() == principalText) {
+      return #err("Cannot demote yourself");
+    };
+    let p = Principal.fromText(principalText);
+    accessControlState.userRoles.add(p, #user);
+    addAudit(caller.toText(), "demoteAdmin", "user", principalText, "Demoted from admin");
+    #ok("Admin status removed from " # principalText);
+  };
+
+  // Register a user (idempotent, called after login)
+  public shared ({ caller }) func registerUser() : async () {
+    if (caller.isAnonymous()) { return };
+    switch (accessControlState.userRoles.get(caller)) {
+      case (?_) {};
+      case (null) {
+        accessControlState.userRoles.add(caller, #user);
+      };
+    };
+  };
+
+
 };
