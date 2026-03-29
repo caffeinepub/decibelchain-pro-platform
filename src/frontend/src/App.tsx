@@ -26,6 +26,7 @@ import { DistributionStatements } from "./pages/DistributionStatements";
 import { DspLookup } from "./pages/DspLookup";
 import { FinancingOffers } from "./pages/FinancingOffers";
 import { HelpCenter } from "./pages/HelpCenter";
+import { IndustryHub } from "./pages/IndustryHub";
 import { IntelligenceDashboard } from "./pages/IntelligenceDashboard";
 import { InvestmentPortfolio } from "./pages/InvestmentPortfolio";
 import { LandingPage } from "./pages/LandingPage";
@@ -96,7 +97,8 @@ export type Page =
   | "tenantOnboarding"
   | "brandingSettings"
   | "vendorPortal"
-  | "adminSetup";
+  | "adminSetup"
+  | "industryHub";
 
 const PAGE_TITLES: Record<Page, string> = {
   dashboard: "dashboard",
@@ -142,6 +144,7 @@ const PAGE_TITLES: Record<Page, string> = {
   brandingSettings: "brandingSettings",
   vendorPortal: "vendorPortal",
   adminSetup: "adminSetup",
+  industryHub: "industryHub",
 };
 
 class PageErrorBoundary extends React.Component<
@@ -201,11 +204,9 @@ function AppInner() {
   const [selectedWorkId, setSelectedWorkId] = useState("");
   const [selectedOrgId, setSelectedOrgId] = useState("");
 
-  // User is logged in when auth succeeded or when we have a restored identity
   const isLoggedIn =
     loginStatus === "success" || (loginStatus === "idle" && !!identity);
 
-  // Register user after login
   useEffect(() => {
     if (isLoggedIn && actor && !isFetching && !registered) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -216,16 +217,13 @@ function AppInner() {
     }
   }, [isLoggedIn, actor, isFetching, registered]);
 
-  // Swipe-right-from-left-edge to open mobile sidebar
   useEffect(() => {
     let touchStartX = 0;
     let touchStartY = 0;
-
     const handleTouchStart = (e: TouchEvent) => {
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
     };
-
     const handleTouchEnd = (e: TouchEvent) => {
       const dx = e.changedTouches[0].clientX - touchStartX;
       const dy = Math.abs(e.changedTouches[0].clientY - touchStartY);
@@ -233,7 +231,6 @@ function AppInner() {
         setMobileSidebarOpen(true);
       }
     };
-
     document.addEventListener("touchstart", handleTouchStart, {
       passive: true,
     });
@@ -244,7 +241,6 @@ function AppInner() {
     };
   }, []);
 
-  // Auto-route to certificate verification if ?verify= param present
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("verify")) {
@@ -254,16 +250,13 @@ function AppInner() {
 
   const pageTitle = i18n.t(PAGE_TITLES[currentPage]);
 
-  // Show a neutral loading screen while the auth client initialises.
-  // This prevents the landing page from flashing before we know if the
-  // user is already logged in.
   if (loginStatus === "initializing") {
     return (
       <div className="flex items-center justify-center h-screen bg-background">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
           <p className="text-muted-foreground text-sm tracking-wide">
-            Loading DecibelChain…
+            Loading DecibelChain\u2026
           </p>
         </div>
       </div>
@@ -272,7 +265,6 @@ function AppInner() {
 
   return (
     <I18nContext.Provider value={i18n}>
-      {/* Skip to main content – visible on keyboard focus */}
       <a
         href="#main-content"
         className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:top-4 focus-visible:left-4 focus-visible:z-[100] focus-visible:px-4 focus-visible:py-2 focus-visible:bg-primary focus-visible:text-primary-foreground focus-visible:rounded-md focus-visible:font-medium focus-visible:text-sm"
@@ -281,7 +273,6 @@ function AppInner() {
       </a>
 
       <div className="flex h-screen bg-background overflow-hidden">
-        {/* Desktop sidebar */}
         <Sidebar
           currentPage={currentPage}
           onNavigate={setCurrentPage}
@@ -292,8 +283,6 @@ function AppInner() {
           isLoggedIn={isLoggedIn}
           onLogin={login}
         />
-
-        {/* Mobile sidebar */}
         <Sidebar
           currentPage={currentPage}
           onNavigate={setCurrentPage}
@@ -307,8 +296,6 @@ function AppInner() {
           isLoggedIn={isLoggedIn}
           onLogin={login}
         />
-
-        {/* Main content */}
         <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
           <Header
             title={pageTitle}
@@ -443,11 +430,13 @@ function AppInner() {
                 {currentPage === "brandingSettings" && <BrandingSettings />}
                 {currentPage === "vendorPortal" && <VendorPortal />}
                 {currentPage === "adminSetup" && <AdminSetup />}
+                {currentPage === "industryHub" && (
+                  <IndustryHub onNavigate={(p) => setCurrentPage(p as Page)} />
+                )}
               </div>
             </PageErrorBoundary>
           </main>
 
-          {/* Mobile bottom navigation */}
           <MobileBottomNav
             currentPage={currentPage}
             onNavigate={setCurrentPage}
@@ -455,16 +444,15 @@ function AppInner() {
             unreadCount={0}
           />
 
-          {/* Footer */}
           <footer className="py-2 px-4 text-center text-xs text-muted-foreground/40 border-t border-border/30">
-            © {new Date().getFullYear()}.{" "}
+            \u00a9 {new Date().getFullYear()}.{" "}
             <a
               href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-muted-foreground transition-colors"
             >
-              Built with ♥ using caffeine.ai
+              Built with \u2665 using caffeine.ai
             </a>
           </footer>
         </div>

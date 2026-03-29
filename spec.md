@@ -1,31 +1,50 @@
 # DecibelChain PRO Platform
 
 ## Current State
-The app currently requires Internet Identity login to access any page. A landing page is shown to unauthenticated users. The backend uses an access-control system where the first logged-in user who calls `_initializeAccessControlWithSecret` with the right token becomes admin. There is no UI to manually seed admin principal IDs without logging in first.
+Fully operational platform with 8 phases live. Sidebar navigation with ~35 pages. Dark navy/gold theme. Public read access everywhere. No dedicated campaign or industry education content exists.
 
 ## Requested Changes (Diff)
 
 ### Add
-- **Public read access everywhere**: All pages/modules are visible to unauthenticated (anonymous) visitors without login. The landing page is replaced by the full app shell shown to everyone.
-- **Sign-in prompt on write actions**: Any button/form/action that creates, submits, or modifies data shows a modal prompt to sign in with Internet Identity when the user is not authenticated. After login, the action can proceed.
-- **Admin Setup screen**: A dedicated page (accessible from the sidebar and without login) where principal IDs can be pasted in to designate as admins. This is the bootstrapping mechanism for the very first admin. Once at least one admin exists, existing admins can also promote other principals to admin from this same screen.
-- **Backend `seedAdminPrincipal`**: A public function callable by anyone that seeds a principal as the first admin — only works when no admin has been assigned yet (bootstrap protection). After the first admin is set, this function becomes a no-op and only `assignCallerUserRole` (admin-only) can promote new admins.
-- **Backend `listAdmins`**: Public query that returns the list of all current admin principal IDs so the setup screen can display them.
-- **Backend `demoteAdmin`**: Admin-callable function to remove admin status from a principal (requires a different admin, not self).
+- New `industryHub` page: "Why DecibelChain" — a public-facing, high-impact campaign and education hub
+- Three audience segment sections (tabbed), ordered:
+  1. **Independent Artists & Songwriters** — lead segment, most urgency
+  2. **Labels, Publishers & Producers** — revenue leakage, inaccurate numbers
+  3. **Session Musicians & Supervisors** — underserved, FairerSplits™ etc.
+- **Industry Stats Panel** with real publicly available data:
+  - $2.65B+ in annual unclaimed "black box" royalties (CISAC reports)
+  - CISAC 2023: $10.9B collected globally, 15-20% unmatched/undistributed
+  - Average PRO payout delay: 12-18 months
+  - Independent artists receive ~12% of total music revenue despite creating 40%+ of content (MIDiA Research)
+  - Streaming payouts: $0.003–$0.005/stream (Spotify), with complex opaque split chains
+  - 75% of songwriters say they cannot trace all their royalty streams (ASCAP surveys)
+  - Session musicians typically receive 0% of backend master royalties unless negotiated
+  - Sync licensing: 40-60% of deals never get fully reported back to composers
+- **Case Studies** section with 4 real-world examples:
+  1. Taylor Swift / masters ownership dispute — importance of controlling your catalog
+  2. The "Black Box" funds problem — ASCAP/BMI/PRS holding hundreds of millions in unclaimed fees
+  3. Session musician payouts — the unnamed contributors who built iconic records
+  4. Prince's artist ownership campaign — "slave" to a label, fighting for his masters
+- **NewWaysNow™ Feature Showcase** — three branded innovations:
+  - **FairerSplits™** — transparent, on-chain split agreements, immutable and auditable
+  - **InstaSplits™** — real-time royalty distribution the moment revenue is recognized, no 12-month delays
+  - **BlackBoxSplits™** — proprietary algorithm to identify, claim, and route previously unmatched "black box" royalties to their rightful owners
+- **Interactive Royalty Calculator** — user inputs monthly streams + PRO type, sees estimated earnings vs DecibelChain potential
+- **Traditional PRO vs DecibelChain Comparison Table** — side by side on: payout speed, transparency, split accuracy, black box handling, cost, control
+- **Pledge / Commitment CTA** — visitors enter name + email + role and submit a pledge to "Take Ownership" — stored in frontend state (no backend persistence required), shows count of pledges made, thank-you confirmation
+- Add `industryHub` page to `Page` type in App.tsx and to Sidebar under new "Campaigns" section
+- Add a prominent "Why DecibelChain" banner/CTA card to the Landing Page pointing to industryHub
 
 ### Modify
-- **App.tsx**: Remove the `if (!isLoggedIn)` guard that shows only the landing page. Instead render the full app shell for all visitors. Pass `isLoggedIn`, `login`, and `isLoggingIn` down as props so pages can gate write actions.
-- **Sidebar**: Add "Admin Setup" nav item visible to all users (or at minimum unauthenticated users before first admin is set).
-- **Pages with write actions**: Wrap create/submit/edit handlers with a `requireAuth` guard that fires the sign-in prompt if not logged in.
+- `App.tsx`: add `industryHub` to Page type, import and render IndustryHub page
+- `Sidebar.tsx`: add new "Campaigns" section with industryHub nav item (Megaphone icon)
+- Landing page: add campaign section / CTA card pointing to industryHub
 
 ### Remove
-- Hard login gate that blocks the entire app for unauthenticated users.
+- Nothing removed
 
 ## Implementation Plan
-1. Add `seedAdminPrincipal(principalText: Text)`, `listAdmins()`, and `demoteAdmin(target: Principal)` to `main.mo`.
-2. Regenerate `backend.d.ts` bindings.
-3. Rewrite `App.tsx` to always render the full app shell, passing `isLoggedIn`/`login` as props.
-4. Create `SignInPromptModal` component triggered when unauthenticated users attempt write actions.
-5. Create `AdminSetup` page: paste-in form for principal IDs (bootstrap when no admins exist), list current admins, promote/demote panel for logged-in admins.
-6. Add `AdminSetup` to sidebar nav and Page type.
-7. Apply `requireAuth` guards to write-action buttons across key pages (CreativeWorks, MarketplaceListings, Certificates, Organizations, etc.).
+1. Create `src/frontend/src/pages/IndustryHub.tsx` — full campaign/education page
+2. Update `src/frontend/src/App.tsx` — add page type and render
+3. Update `src/frontend/src/components/Sidebar.tsx` — add Campaigns nav section
+4. Update landing page to add CTA card to the campaign hub

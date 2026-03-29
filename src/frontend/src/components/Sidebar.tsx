@@ -22,6 +22,7 @@ import {
   LineChart,
   LogIn,
   LogOut,
+  Megaphone,
   Menu,
   MessageCircle,
   Mic2,
@@ -158,6 +159,12 @@ const vendorPortalNavItems: {
   key: string;
 }[] = [{ page: "vendorPortal", icon: Package, key: "vendorPortal" }];
 
+const campaignNavItems: {
+  page: Page;
+  icon: React.ComponentType<{ className?: string }>;
+  key: string;
+}[] = [{ page: "industryHub", icon: Megaphone, key: "industryHub" }];
+
 function NavSection({
   items,
   currentPage,
@@ -256,7 +263,7 @@ export function Sidebar({
       ]);
       setIsAdmin(Boolean(adminCheck));
       const totalUnread = convs.reduce(
-        (sum, c) => sum + Number(c.unreadCount),
+        (sum: number, c: any) => sum + Number(c.unreadCount),
         0,
       );
       setUnreadMsgs(totalUnread);
@@ -274,7 +281,6 @@ export function Sidebar({
     }
   }, [actor, isFetching, fetchBadges]);
 
-  // Focus management for mobile sidebar
   useEffect(() => {
     if (!isMobile) return;
     if (mobileOpen) {
@@ -430,6 +436,22 @@ export function Sidebar({
           t={t}
         />
 
+        {/* Campaigns section */}
+        {(!collapsed || isMobile) && (
+          <p className="px-3 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-primary/60">
+            Campaigns
+          </p>
+        )}
+        <NavSection
+          items={campaignNavItems}
+          currentPage={currentPage}
+          onNavigate={onNavigate}
+          onMobileClose={onMobileClose}
+          collapsed={collapsed}
+          isMobile={isMobile}
+          t={t}
+        />
+
         {/* Vendors section */}
         {(!collapsed || isMobile) && (
           <p className="px-3 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground/50">
@@ -494,7 +516,7 @@ export function Sidebar({
           t={t}
         />
 
-        {/* Analytics / Reports section */}
+        {/* Analytics section */}
         {(!collapsed || isMobile) && (
           <p className="px-3 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground/50">
             {t("intelligence")}
@@ -558,6 +580,7 @@ export function Sidebar({
           t={t}
           badges={communityBadges}
         />
+
         {/* Discovery section */}
         {(!collapsed || isMobile) && (
           <p className="px-3 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground/50">
@@ -573,6 +596,7 @@ export function Sidebar({
           isMobile={isMobile}
           t={t}
         />
+
         {/* Marketplace section */}
         {(!collapsed || isMobile) && (
           <p className="px-3 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground/50">
@@ -588,6 +612,7 @@ export function Sidebar({
           isMobile={isMobile}
           t={t}
         />
+
         {/* Contracts section */}
         {(!collapsed || isMobile) && (
           <p className="px-3 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground/50">
@@ -603,6 +628,7 @@ export function Sidebar({
           isMobile={isMobile}
           t={t}
         />
+
         {/* Help section */}
         {(!collapsed || isMobile) && (
           <p className="px-3 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground/50">
@@ -618,6 +644,7 @@ export function Sidebar({
           isMobile={isMobile}
           t={t}
         />
+
         {/* Onboarding section */}
         {(!collapsed || isMobile) && (
           <p className="px-3 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground/50">
@@ -633,6 +660,7 @@ export function Sidebar({
           isMobile={isMobile}
           t={t}
         />
+
         {/* Admin section */}
         {isAdmin && (
           <>

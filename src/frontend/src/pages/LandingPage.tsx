@@ -5,8 +5,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { FileText, Globe, Loader2, Music, Shield, Users } from "lucide-react";
-import { ChevronDown } from "lucide-react";
+import {
+  ChevronDown,
+  FileText,
+  Globe,
+  Loader2,
+  Megaphone,
+  Music,
+  Shield,
+  Users,
+} from "lucide-react";
 import { motion } from "motion/react";
 import { LANGUAGES, useTranslation } from "../i18n";
 import type { Language } from "../i18n";
@@ -14,6 +22,7 @@ import type { Language } from "../i18n";
 interface LandingPageProps {
   onLogin: () => void;
   isLoggingIn: boolean;
+  onNavigate?: (page: string) => void;
 }
 
 const features = [
@@ -23,7 +32,11 @@ const features = [
   { key: "feature4", icon: Globe },
 ];
 
-export function LandingPage({ onLogin, isLoggingIn }: LandingPageProps) {
+export function LandingPage({
+  onLogin,
+  isLoggingIn,
+  onNavigate,
+}: LandingPageProps) {
   const { t, language, setLanguage } = useTranslation();
   const currentLang = LANGUAGES.find((l) => l.code === language);
 
@@ -62,6 +75,37 @@ export function LandingPage({ onLogin, isLoggingIn }: LandingPageProps) {
         </DropdownMenu>
       </header>
 
+      {/* Campaign Banner */}
+      {onNavigate && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="mx-6 mb-2 rounded-xl bg-primary/10 border border-primary/30 px-5 py-4 flex flex-col sm:flex-row items-center justify-between gap-4"
+        >
+          <div className="flex items-center gap-3">
+            <Megaphone className="w-5 h-5 text-primary flex-shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                The Music Industry Owes You More
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Discover why thousands of creators are switching to self-managed
+                PRO rights.
+              </p>
+            </div>
+          </div>
+          <Button
+            data-ocid="landing.campaign.primary_button"
+            size="sm"
+            onClick={() => onNavigate("industryHub")}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold flex-shrink-0"
+          >
+            See Why Thousands Are Switching \u2192
+          </Button>
+        </motion.div>
+      )}
+
       {/* Hero */}
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-16">
         <motion.div
@@ -70,7 +114,6 @@ export function LandingPage({ onLogin, isLoggingIn }: LandingPageProps) {
           transition={{ duration: 0.6 }}
           className="text-center max-w-2xl"
         >
-          {/* Icon */}
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -134,14 +177,14 @@ export function LandingPage({ onLogin, isLoggingIn }: LandingPageProps) {
 
       {/* Footer */}
       <footer className="text-center py-4 text-xs text-muted-foreground/50">
-        © {new Date().getFullYear()}.{" "}
+        \u00a9 {new Date().getFullYear()}.{" "}
         <a
           href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
           target="_blank"
           rel="noopener noreferrer"
           className="hover:text-muted-foreground transition-colors"
         >
-          Built with ♥ using caffeine.ai
+          Built with \u2665 using caffeine.ai
         </a>
       </footer>
     </div>
