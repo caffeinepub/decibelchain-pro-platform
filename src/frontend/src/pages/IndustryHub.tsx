@@ -17,6 +17,8 @@ import {
   ChevronUp,
   ExternalLink,
   GitFork,
+  KeyRound,
+  Loader2,
   Lock,
   Music2,
   Search,
@@ -31,6 +33,9 @@ import { useEffect, useRef, useState } from "react";
 
 interface IndustryHubProps {
   onNavigate: (page: string) => void;
+  isLoggedIn?: boolean;
+  onLogin?: () => void;
+  isLoggingIn?: boolean;
 }
 
 const STATS = [
@@ -215,7 +220,12 @@ function formatNumber(n: number): string {
   return `$${n.toFixed(0)}`;
 }
 
-export function IndustryHub({ onNavigate }: IndustryHubProps) {
+export function IndustryHub({
+  onNavigate,
+  isLoggedIn,
+  onLogin,
+  isLoggingIn,
+}: IndustryHubProps) {
   const [openCase, setOpenCase] = useState<string | null>(null);
   const [streams, setStreams] = useState(100000);
   const [currentPro, setCurrentPro] = useState("ASCAP");
@@ -299,6 +309,29 @@ export function IndustryHub({ onNavigate }: IndustryHubProps) {
                 See the Evidence
               </Button>
             </div>
+            {!isLoggedIn && onLogin && (
+              <div className="mt-6">
+                <button
+                  type="button"
+                  onClick={onLogin}
+                  disabled={isLoggingIn}
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/10 border border-white/30 text-white text-sm font-medium hover:bg-white/20 transition-colors disabled:opacity-60"
+                >
+                  {isLoggingIn ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <KeyRound className="w-4 h-4" />
+                  )}
+                  {isLoggingIn
+                    ? "Opening Internet Identity..."
+                    : "Sign in free with Internet Identity"}
+                </button>
+                <p className="text-white/40 text-xs mt-2">
+                  Internet Identity is free, private, and runs on ICP — no email
+                  or password required.
+                </p>
+              </div>
+            )}
           </motion.div>
         </div>
       </section>

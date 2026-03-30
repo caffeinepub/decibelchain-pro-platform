@@ -1,5 +1,5 @@
 import { Toaster } from "@/components/ui/sonner";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Header } from "./components/Header";
 import { MobileBottomNav } from "./components/MobileBottomNav";
 import { Sidebar } from "./components/Sidebar";
@@ -29,7 +29,6 @@ import { HelpCenter } from "./pages/HelpCenter";
 import { IndustryHub } from "./pages/IndustryHub";
 import { IntelligenceDashboard } from "./pages/IntelligenceDashboard";
 import { InvestmentPortfolio } from "./pages/InvestmentPortfolio";
-import { LandingPage } from "./pages/LandingPage";
 import { LicensingManager } from "./pages/LicensingManager";
 import { MarketplaceAdmin } from "./pages/MarketplaceAdmin";
 import { MarketplaceListings } from "./pages/MarketplaceListings";
@@ -192,10 +191,13 @@ class PageErrorBoundary extends React.Component<
 
 function AppInner() {
   const i18n = useI18nState();
-  const { login, clear, loginStatus, identity } = useInternetIdentity();
+  const { login, clear, loginStatus, identity, isLoggingIn } =
+    useInternetIdentity();
   const { actor, isFetching } = useActor();
   const { data: profile } = useMyProfile();
-  const [currentPage, setCurrentPage] = useState<Page>("dashboard");
+
+  // ── Default landing page is the Campaign Hub (industryHub) ──────────────────
+  const [currentPage, setCurrentPage] = useState<Page>("industryHub");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [registered, setRegistered] = useState(false);
@@ -206,6 +208,17 @@ function AppInner() {
 
   const isLoggedIn =
     loginStatus === "success" || (loginStatus === "idle" && !!identity);
+
+  // Track previous login state to detect transitions without causing loops
+  const prevLoggedIn = useRef(isLoggedIn);
+
+  // When user successfully signs in, redirect to the dashboard once
+  useEffect(() => {
+    if (!prevLoggedIn.current && isLoggedIn) {
+      setCurrentPage("dashboard");
+    }
+    prevLoggedIn.current = isLoggedIn;
+  }, [isLoggedIn]);
 
   useEffect(() => {
     if (isLoggedIn && actor && !isFetching && !registered) {
@@ -431,7 +444,12 @@ function AppInner() {
                 {currentPage === "vendorPortal" && <VendorPortal />}
                 {currentPage === "adminSetup" && <AdminSetup />}
                 {currentPage === "industryHub" && (
-                  <IndustryHub onNavigate={(p) => setCurrentPage(p as Page)} />
+                  <IndustryHub
+                    onNavigate={(p) => setCurrentPage(p as Page)}
+                    isLoggedIn={isLoggedIn}
+                    onLogin={login}
+                    isLoggingIn={isLoggingIn}
+                  />
                 )}
               </div>
             </PageErrorBoundary>
