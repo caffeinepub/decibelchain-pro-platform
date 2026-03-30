@@ -12,41 +12,53 @@ export function useActor() {
   const actorQuery = useQuery<backendInterface>({
     queryKey: [ACTOR_QUERY_KEY, identity?.getPrincipal().toString()],
     queryFn: async () => {
-      if (!identity) {
-        // Return anonymous actor for unauthenticated users
+      const isAuthenticated = !!identity;
+
+      if (!isAuthenticated) {
+        // Return anonymous actor if not authenticated
         return await createActorWithConfig();
       }
 
-      const actor = await createActorWithConfig({
-        agentOptions: { identity },
-      });
+      const actorOptions = {
+        agentOptions: {
+          identity,
+        },
+      };
 
-      // Only call _initializeAccessControlWithSecret when an actual admin
-      // token is present in the URL — never with an empty string, as that
-      // causes a 2-second failing ICP update call that nullifies the actor.
-      const adminToken = getSecretParameter("caffeineAdminToken");
+      const actor = await createActorWithConfig(actorOptions);
+
+      // Attempt admin bootstrap if a token is present in the URL.
+      // This is only needed during first-time admin setup — wrap in try/catch
+      // so a missing or invalid token never blocks authenticated saves.
+      const adminToken = getSecretParameter("caffeineAdminToken") || "";
       if (adminToken) {
         try {
           await actor._initializeAccessControlWithSecret(adminToken);
         } catch {
-          // Non-critical — proceed with the actor regardless
+          // Token invalid or already bootstrapped — proceed normally
         }
       }
 
       return actor;
     },
+    // Only refetch when identity changes
     staleTime: Number.POSITIVE_INFINITY,
+    // This will cause the actor to be recreated when the identity changes
     enabled: true,
   });
 
-  // Invalidate dependent queries when the actor changes
+  // When the actor changes, invalidate dependent queries
   useEffect(() => {
     if (actorQuery.data) {
       queryClient.invalidateQueries({
-        predicate: (query) => !query.queryKey.includes(ACTOR_QUERY_KEY),
+        predicate: (query) => {
+          return !query.queryKey.includes(ACTOR_QUERY_KEY);
+        },
       });
       queryClient.refetchQueries({
-        predicate: (query) => !query.queryKey.includes(ACTOR_QUERY_KEY),
+        predicate: (query) => {
+          return !query.queryKey.includes(ACTOR_QUERY_KEY);
+        },
       });
     }
   }, [actorQuery.data, queryClient]);
