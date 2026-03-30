@@ -26,19 +26,8 @@ export function useActor() {
       };
 
       const actor = await createActorWithConfig(actorOptions);
-
-      // Attempt admin bootstrap if a token is present in the URL.
-      // This is only needed during first-time admin setup — wrap in try/catch
-      // so a missing or invalid token never blocks authenticated saves.
       const adminToken = getSecretParameter("caffeineAdminToken") || "";
-      if (adminToken) {
-        try {
-          await actor._initializeAccessControlWithSecret(adminToken);
-        } catch {
-          // Token invalid or already bootstrapped — proceed normally
-        }
-      }
-
+      await actor._initializeAccessControlWithSecret(adminToken);
       return actor;
     },
     // Only refetch when identity changes
