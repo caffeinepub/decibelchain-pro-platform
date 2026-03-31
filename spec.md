@@ -1,50 +1,47 @@
 # DecibelChain PRO Platform
 
 ## Current State
-Fully operational platform with 8 phases live. Sidebar navigation with ~35 pages. Dark navy/gold theme. Public read access everywhere. No dedicated campaign or industry education content exists.
+
+The app has a persistent blank-screen bug that has survived every fix attempt because the root cause is in a library-generated file (`src/frontend/src/hooks/useInternetIdentity.ts`) that keeps regenerating with broken code:
+- `authClient` stored in `useState` AND listed as a `useEffect` dependency — triggers an infinite re-initialization loop on every auth state change
+- A `finally` block that always runs `setStatus("idle")` — silently overwrites successful logins
+- App.tsx has a guard `if (loginStatus === "initializing") { return <spinner> }` that blanks the entire screen whenever the hook re-initializes
+
+Every attempted fix to the library file reverts on the next code generation cycle, causing the regression loop.
 
 ## Requested Changes (Diff)
 
 ### Add
-- New `industryHub` page: "Why DecibelChain" — a public-facing, high-impact campaign and education hub
-- Three audience segment sections (tabbed), ordered:
-  1. **Independent Artists & Songwriters** — lead segment, most urgency
-  2. **Labels, Publishers & Producers** — revenue leakage, inaccurate numbers
-  3. **Session Musicians & Supervisors** — underserved, FairerSplits™ etc.
-- **Industry Stats Panel** with real publicly available data:
-  - $2.65B+ in annual unclaimed "black box" royalties (CISAC reports)
-  - CISAC 2023: $10.9B collected globally, 15-20% unmatched/undistributed
-  - Average PRO payout delay: 12-18 months
-  - Independent artists receive ~12% of total music revenue despite creating 40%+ of content (MIDiA Research)
-  - Streaming payouts: $0.003–$0.005/stream (Spotify), with complex opaque split chains
-  - 75% of songwriters say they cannot trace all their royalty streams (ASCAP surveys)
-  - Session musicians typically receive 0% of backend master royalties unless negotiated
-  - Sync licensing: 40-60% of deals never get fully reported back to composers
-- **Case Studies** section with 4 real-world examples:
-  1. Taylor Swift / masters ownership dispute — importance of controlling your catalog
-  2. The "Black Box" funds problem — ASCAP/BMI/PRS holding hundreds of millions in unclaimed fees
-  3. Session musician payouts — the unnamed contributors who built iconic records
-  4. Prince's artist ownership campaign — "slave" to a label, fighting for his masters
-- **NewWaysNow™ Feature Showcase** — three branded innovations:
-  - **FairerSplits™** — transparent, on-chain split agreements, immutable and auditable
-  - **InstaSplits™** — real-time royalty distribution the moment revenue is recognized, no 12-month delays
-  - **BlackBoxSplits™** — proprietary algorithm to identify, claim, and route previously unmatched "black box" royalties to their rightful owners
-- **Interactive Royalty Calculator** — user inputs monthly streams + PRO type, sees estimated earnings vs DecibelChain potential
-- **Traditional PRO vs DecibelChain Comparison Table** — side by side on: payout speed, transparency, split accuracy, black box handling, cost, control
-- **Pledge / Commitment CTA** — visitors enter name + email + role and submit a pledge to "Take Ownership" — stored in frontend state (no backend persistence required), shows count of pledges made, thank-you confirmation
-- Add `industryHub` page to `Page` type in App.tsx and to Sidebar under new "Campaigns" section
-- Add a prominent "Why DecibelChain" banner/CTA card to the Landing Page pointing to industryHub
+- `src/frontend/src/hooks/useAuth.ts` — brand new standalone auth hook in a non-library file that is never regenerated:
+  - `authClient` lives in `useRef`, never in state — cannot trigger re-renders
+  - `useEffect` has empty dependency array `[]` — runs exactly once on mount
+  - Starts as `"idle"` (never sets `"initializing"` — Strategy B: app always renders immediately)
+  - No `finally` block — status only set explicitly in success/error branches
+  - `login()` calls Internet Identity directly (works via modal overlay — Strategy D)
+  - `clear()` logs out cleanly
+  - Background session restoration: silently checks for existing session on mount, sets `"success"` if found, stays `"idle"` if not
+- `src/frontend/src/contexts/AuthContext.tsx` — React context wrapping `useAuth` for app-wide sharing. Exports `AuthProvider` and `useAuthContext`.
+- `showSignInModal` state in `AppInner` — all sign-in requests anywhere in the app open the existing `SignInPromptModal` as an overlay (Strategy D: current page always stays mounted)
 
 ### Modify
-- `App.tsx`: add `industryHub` to Page type, import and render IndustryHub page
-- `Sidebar.tsx`: add new "Campaigns" section with industryHub nav item (Megaphone icon)
-- Landing page: add campaign section / CTA card pointing to industryHub
+- `src/frontend/src/main.tsx` — Replace `InternetIdentityProvider` import/wrapper with `AuthProvider` from new `AuthContext.tsx`. Remove the import of `useInternetIdentity.ts`.
+- `src/frontend/src/App.tsx`:
+  - Replace `useInternetIdentity()` call with `useAuthContext()` from new context
+  - **Remove the `if (loginStatus === "initializing") { return spinner }` guard entirely** — the app ALWAYS renders its full UI immediately (this is the primary fix for Strategy B)
+  - All `onLogin` callbacks passed to Sidebar, IndustryHub, etc. now call `() => setShowSignInModal(true)` instead of `login()` directly
+  - After login success (detected via `useEffect` watching `isLoggedIn`), close the modal and optionally navigate to Dashboard
+  - Add `showSignInModal` state + render `<SignInPromptModal>` overlay at the App root level
+- `src/frontend/src/hooks/useActor.ts` — Replace `useInternetIdentity()` with `useAuthContext()` from new context to get `identity`
 
 ### Remove
-- Nothing removed
+- The `if (loginStatus === "initializing") { return spinner }` blank screen guard from `App.tsx`
+- All direct imports of `useInternetIdentity` from `App.tsx` and `useActor.ts` (the library file itself is left in place but no longer imported by anything critical)
 
 ## Implementation Plan
-1. Create `src/frontend/src/pages/IndustryHub.tsx` — full campaign/education page
-2. Update `src/frontend/src/App.tsx` — add page type and render
-3. Update `src/frontend/src/components/Sidebar.tsx` — add Campaigns nav section
-4. Update landing page to add CTA card to the campaign hub
+
+1. Create `src/frontend/src/hooks/useAuth.ts` with the clean standalone implementation
+2. Create `src/frontend/src/contexts/AuthContext.tsx` as a context provider wrapping `useAuth`
+3. Update `src/frontend/src/main.tsx` — swap `InternetIdentityProvider` for `AuthProvider`
+4. Update `src/frontend/src/hooks/useActor.ts` — use `useAuthContext().identity`
+5. Update `src/frontend/src/App.tsx` — use `useAuthContext()`, remove blank screen gate, wire up modal-only sign-in flow
+6. Validate (lint + typecheck + build) and fix any errors

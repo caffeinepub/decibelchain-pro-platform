@@ -3,9 +3,10 @@ import React, { useEffect, useRef, useState } from "react";
 import { Header } from "./components/Header";
 import { MobileBottomNav } from "./components/MobileBottomNav";
 import { Sidebar } from "./components/Sidebar";
+import { SignInPromptModal } from "./components/SignInPromptModal";
+import { useAuthContext } from "./contexts/AuthContext";
 import { BrandingProvider } from "./contexts/BrandingContext";
 import { useActor } from "./hooks/useActor";
-import { useInternetIdentity } from "./hooks/useInternetIdentity";
 import { useMyProfile } from "./hooks/useQueries";
 import { I18nContext, useI18nState } from "./i18n";
 import { ActivityFeed } from "./pages/ActivityFeed";
@@ -191,8 +192,9 @@ class PageErrorBoundary extends React.Component<
 
 function AppInner() {
   const i18n = useI18nState();
-  const { login, clear, loginStatus, identity, isLoggingIn } =
-    useInternetIdentity();
+  // Strategy B + D: useAuthContext never sets "initializing" — app renders immediately.
+  // Sign-in happens via modal overlay — the current page NEVER unmounts during login.
+  const { login, clear, isLoggedIn, isLoggingIn } = useAuthContext();
   const { actor, isFetching } = useActor();
   const { data: profile } = useMyProfile();
 
@@ -205,17 +207,17 @@ function AppInner() {
   const [publicProfileId, setPublicProfileId] = useState("");
   const [selectedWorkId, setSelectedWorkId] = useState("");
   const [selectedOrgId, setSelectedOrgId] = useState("");
-
-  const isLoggedIn =
-    loginStatus === "success" || (loginStatus === "idle" && !!identity);
+  // Strategy D: sign-in modal state — page never unmounts when this opens/closes
+  const [showSignInModal, setShowSignInModal] = useState(false);
 
   // Track previous login state to detect transitions without causing loops
   const prevLoggedIn = useRef(isLoggedIn);
 
-  // When user successfully signs in, redirect to the dashboard once
+  // When user successfully signs in, redirect to the dashboard and close the modal
   useEffect(() => {
     if (!prevLoggedIn.current && isLoggedIn) {
       setCurrentPage("dashboard");
+      setShowSignInModal(false);
     }
     prevLoggedIn.current = isLoggedIn;
   }, [isLoggedIn]);
@@ -263,18 +265,13 @@ function AppInner() {
 
   const pageTitle = i18n.t(PAGE_TITLES[currentPage]);
 
-  if (loginStatus === "initializing") {
-    return (
-      <div className="flex items-center justify-center h-screen bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-          <p className="text-muted-foreground text-sm tracking-wide">
-            Loading DecibelChain\u2026
-          </p>
-        </div>
-      </div>
-    );
-  }
+  // Strategy D: open the sign-in modal instead of calling login() directly.
+  // The current page NEVER unmounts — the modal is a pure overlay.
+  const handleRequestLogin = () => setShowSignInModal(true);
+
+  // NOTE: There is no "initializing" state and no full-screen spinner here.
+  // Strategy B: the app always renders immediately in guest mode.
+  // Auth resolves silently in the background via useAuth's useEffect.
 
   return (
     <I18nContext.Provider value={i18n}>
@@ -294,7 +291,7 @@ function AppInner() {
           onToggleCollapse={() => setSidebarCollapsed((v) => !v)}
           displayName={profile?.displayName || undefined}
           isLoggedIn={isLoggedIn}
-          onLogin={login}
+          onLogin={handleRequestLogin}
         />
         <Sidebar
           currentPage={currentPage}
@@ -307,7 +304,7 @@ function AppInner() {
           mobileOpen={mobileSidebarOpen}
           onMobileClose={() => setMobileSidebarOpen(false)}
           isLoggedIn={isLoggedIn}
-          onLogin={login}
+          onLogin={handleRequestLogin}
         />
         <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
           <Header
@@ -430,8 +427,8 @@ function AppInner() {
                 {currentPage === "certificates" && <Certificates />}
                 {currentPage === "certificateVerification" && (
                   <CertificateVerification
-                    onLogin={login}
-                    isAuthenticated={true}
+                    onLogin={handleRequestLogin}
+                    isAuthenticated={isLoggedIn}
                   />
                 )}
                 {currentPage === "helpCenter" && <HelpCenter />}
@@ -447,7 +444,7 @@ function AppInner() {
                   <IndustryHub
                     onNavigate={(p) => setCurrentPage(p as Page)}
                     isLoggedIn={isLoggedIn}
-                    onLogin={login}
+                    onLogin={handleRequestLogin}
                     isLoggingIn={isLoggingIn}
                   />
                 )}
@@ -475,6 +472,15 @@ function AppInner() {
           </footer>
         </div>
       </div>
+
+      {/* Strategy D: Sign-in modal overlay — page content NEVER unmounts */}
+      <SignInPromptModal
+        open={showSignInModal}
+        onClose={() => setShowSignInModal(false)}
+        onLogin={login}
+        isLoggingIn={isLoggingIn}
+      />
+
       <Toaster />
     </I18nContext.Provider>
   );
