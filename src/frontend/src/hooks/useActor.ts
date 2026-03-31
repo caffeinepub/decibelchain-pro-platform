@@ -26,13 +26,23 @@ export function useActor() {
       };
 
       const actor = await createActorWithConfig(actorOptions);
-      const adminToken = getSecretParameter("caffeineAdminToken") || "";
-      await actor._initializeAccessControlWithSecret(adminToken);
+
+      // ONLY call _initializeAccessControlWithSecret when an actual admin token
+      // is present in the URL. Calling it with an empty string causes a failing
+      // 2-second ICP update call that corrupts the actor and blocks all saves.
+      const adminToken = getSecretParameter("caffeineAdminToken");
+      if (adminToken) {
+        try {
+          await actor._initializeAccessControlWithSecret(adminToken);
+        } catch {
+          // Non-fatal: admin token invalid, continue as regular user
+        }
+      }
+
       return actor;
     },
     // Only refetch when identity changes
     staleTime: Number.POSITIVE_INFINITY,
-    // This will cause the actor to be recreated when the identity changes
     enabled: true,
   });
 
