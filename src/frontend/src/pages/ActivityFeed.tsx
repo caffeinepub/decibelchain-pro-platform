@@ -23,8 +23,8 @@ import { Heart, MessageSquare, PenSquare, Rss, Send } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { CommunityPost, Organization, PostComment } from "../backend.d";
+import { useAuthContext } from "../contexts/AuthContext";
 import { useActor } from "../hooks/useActor";
-import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { useTranslation } from "../i18n";
 
 function initials(name: string) {
@@ -242,7 +242,7 @@ function PostCard({
 export function ActivityFeed() {
   const { t } = useTranslation();
   const { actor, isFetching } = useActor();
-  const { identity } = useInternetIdentity();
+  const { identity } = useAuthContext();
   const myPrincipal = identity?.getPrincipal().toString() ?? "";
 
   const [posts, setPosts] = useState<CommunityPost[]>([]);

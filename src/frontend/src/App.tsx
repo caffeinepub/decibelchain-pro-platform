@@ -486,6 +486,8 @@ function AppInner() {
   );
 }
 
+// CRITICAL: AuthProvider is mounted here in main.tsx, NOT in App.
+// App is a pure layout wrapper — no auth logic lives here.
 export default function App() {
   return (
     <BrandingProvider>

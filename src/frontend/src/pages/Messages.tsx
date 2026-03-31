@@ -21,8 +21,8 @@ import type {
   DirectMessage,
   MemberProfile,
 } from "../backend.d";
+import { useAuthContext } from "../contexts/AuthContext";
 import { useActor } from "../hooks/useActor";
-import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { useTranslation } from "../i18n";
 
 function initials(name: string) {
@@ -48,7 +48,7 @@ function timeAgo(ts: bigint): string {
 export function Messages() {
   const { t } = useTranslation();
   const { actor, isFetching } = useActor();
-  const { identity } = useInternetIdentity();
+  const { identity } = useAuthContext();
   const myPrincipal = identity?.getPrincipal().toString() ?? "";
 
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);

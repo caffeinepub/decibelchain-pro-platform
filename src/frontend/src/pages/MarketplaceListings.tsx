@@ -35,8 +35,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { useActor } from "@/hooks/useActor";
-import { useInternetIdentity } from "@/hooks/useInternetIdentity";
 import { useTranslation } from "@/i18n";
 import {
   CheckCircle,
@@ -231,7 +231,7 @@ export function MarketplaceListings({
 }: { isAuthenticated: boolean }) {
   const { t } = useTranslation();
   const { actor, isFetching } = useActor();
-  const { identity } = useInternetIdentity();
+  const { identity } = useAuthContext();
 
   const callerPrincipal = identity?.getPrincipal().toString() ?? "";
 

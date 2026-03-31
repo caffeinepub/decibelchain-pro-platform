@@ -23,14 +23,12 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useAuthContext } from "../contexts/AuthContext";
 import { useActor } from "../hooks/useActor";
-import { useInternetIdentity } from "../hooks/useInternetIdentity";
 
 export function AdminSetup() {
   const { actor, isFetching } = useActor();
-  const { login, isLoggingIn, loginStatus, identity } = useInternetIdentity();
-  const isLoggedIn =
-    loginStatus === "success" || (loginStatus === "idle" && !!identity);
+  const { login, isLoggingIn, isLoggedIn, identity } = useAuthContext();
 
   const [hasSeeded, setHasSeeded] = useState<boolean | null>(null);
   const [admins, setAdmins] = useState<string[]>([]);

@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Save, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import { useAuthContext } from "../contexts/AuthContext";
 import {
   formatTimestamp,
   useMyProfile,
@@ -19,7 +19,7 @@ import { useTranslation } from "../i18n";
 
 export function Profile() {
   const { t } = useTranslation();
-  const { identity } = useInternetIdentity();
+  const { identity } = useAuthContext();
   const { data: profile, isLoading } = useMyProfile();
   const { data: orgs } = useOrganizations();
   const upsertProfile = useUpsertProfile();

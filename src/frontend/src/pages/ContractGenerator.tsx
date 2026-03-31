@@ -34,8 +34,8 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { Contract, ContractParty, ContractTemplate } from "../backend.d";
 import { ContractStatus, ContractType } from "../backend.d";
+import { useAuthContext } from "../contexts/AuthContext";
 import { useActor } from "../hooks/useActor";
-import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { useOrganizations } from "../hooks/useQueries";
 import { useTranslation } from "../i18n";
 
@@ -1244,7 +1244,7 @@ function ContractsTab({
 export function ContractGenerator() {
   const { t } = useTranslation();
   const { actor, isFetching } = useActor();
-  const { identity } = useInternetIdentity();
+  const { identity } = useAuthContext();
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAdmin, setCheckingAdmin] = useState(true);
 

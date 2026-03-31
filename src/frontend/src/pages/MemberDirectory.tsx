@@ -14,8 +14,8 @@ import {
 import { useCallback, useEffect, useState } from "react";
 import type { Page } from "../App";
 import type { MemberProfile } from "../backend.d";
+import { useAuthContext } from "../contexts/AuthContext";
 import { useActor } from "../hooks/useActor";
-import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { useTranslation } from "../i18n";
 
 function initials(name: string) {
@@ -46,7 +46,7 @@ export function MemberDirectory({
 }: MemberDirectoryProps) {
   const { t } = useTranslation();
   const { actor, isFetching } = useActor();
-  const { identity } = useInternetIdentity();
+  const { identity } = useAuthContext();
   const myPrincipal = identity?.getPrincipal().toString() ?? "";
 
   const [members, setMembers] = useState<MemberProfile[]>([]);
