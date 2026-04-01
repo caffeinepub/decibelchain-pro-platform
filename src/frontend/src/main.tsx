@@ -4,10 +4,6 @@ import App from "./App";
 import { AuthProvider } from "./contexts/AuthContext";
 import "./index.css";
 
-// CRITICAL: InternetIdentityProvider is NOT used here.
-// It is the broken library that causes blank screen loops.
-// AuthProvider (custom) wraps the app instead.
-
 BigInt.prototype.toJSON = function () {
   return this.toString();
 };
