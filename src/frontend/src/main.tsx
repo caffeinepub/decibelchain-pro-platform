@@ -4,11 +4,6 @@ import App from "./App";
 import { AuthProvider } from "./contexts/AuthContext";
 import "./index.css";
 
-// CRITICAL: InternetIdentityProvider is intentionally NOT imported here.
-// The broken library (useInternetIdentity.ts) runs authClient in state with
-// effect deps, causing a re-initialization loop on every sign-in.
-// AuthProvider (custom hook) is the sole auth mechanism.
-
 BigInt.prototype.toJSON = function () {
   return this.toString();
 };
