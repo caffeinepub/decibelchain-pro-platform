@@ -16,6 +16,10 @@ declare global {
 
 const queryClient = new QueryClient();
 
+// CRITICAL: AuthProvider is mounted HERE — wrapping the entire app.
+// InternetIdentityProvider from the broken library is NEVER used here.
+// Any regeneration of that library file cannot affect the app because
+// nothing imports it except useInternetIdentity.ts itself (which is now a safe stub).
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
