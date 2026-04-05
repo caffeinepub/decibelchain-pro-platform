@@ -1,33 +1,34 @@
 // ============================================================
-// SAFE STUB — DO NOT MODIFY OR RESTORE THE ORIGINAL CONTENT
+// HARD-ERROR STUB — DO NOT USE THIS FILE
 // ============================================================
-// The original useInternetIdentity library had three bugs that
-// caused a blank screen loop after every sign-in:
+// This file intentionally replaces the broken useInternetIdentity library.
+// The original library contained three bugs that caused a persistent blank
+// screen loop after every sign-in:
+//   1. authClient stored in useState — triggered effect re-runs on every update
+//   2. authClient + createOptions listed as effect dependencies — infinite loop
+//   3. `finally { setStatus("idle") }` — silently overwrote successful logins
 //
-//   1. authClient stored in useState — re-renders on every creation
-//   2. authClient + createOptions listed as useEffect dependencies —
-//      the effect re-ran every time the client was set, calling
-//      setStatus("initializing") and blanking the screen
-//   3. A finally block that always reset status to "idle", silently
-//      overwriting a successful login
+// All auth is now handled by:
+//   - hooks/useAuth.ts          (clean custom hook, authClient in a ref)
+//   - contexts/AuthContext.tsx  (React context provider)
 //
-// This stub exists to prevent any file from accidentally importing
-// the broken implementation. All auth logic has moved to:
-//   src/frontend/src/hooks/useAuth.ts          (custom hook)
-//   src/frontend/src/contexts/AuthContext.tsx  (provider + context)
-//
-// If you see a blank screen after sign-in, the first thing to check
-// is whether anything has started importing from this file again.
+// If you see this error, update your import:
+//   WRONG:   import { useInternetIdentity } from "./useInternetIdentity"
+//   CORRECT: import { useAuthContext } from "../contexts/AuthContext"
 // ============================================================
+
+import type React from "react";
 
 export function useInternetIdentity(): never {
   throw new Error(
     "[DecibelChain] useInternetIdentity is disabled. " +
-      "Import useAuthContext from contexts/AuthContext instead.",
+      "Use useAuthContext() from contexts/AuthContext instead.",
   );
 }
 
-export function InternetIdentityProvider(): never {
+export function InternetIdentityProvider(_props: {
+  children: React.ReactNode;
+}): never {
   throw new Error(
     "[DecibelChain] InternetIdentityProvider is disabled. " +
       "Use AuthProvider from contexts/AuthContext instead.",
