@@ -2,34 +2,39 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import type { backendInterface } from "../backend";
 import { createActorWithConfig } from "../config";
-// CRITICAL: This file must NEVER import from useInternetIdentity.ts
-// useInternetIdentity.ts is the broken library with authClient in useState.
-// Identity is read from AuthContext (the correct custom hook) only.
 import { useAuthContext } from "../contexts/AuthContext";
 import { getSecretParameter } from "../utils/urlParams";
 
-const ACTOR_QUERY_KEY = "actor";
+// CRITICAL: Identity must come from AuthContext (the custom useAuth hook),
+// NOT from useInternetIdentity. The library hook stores authClient in useState
+// which causes an infinite loop after sign-in. This file must never import
+// from useInternetIdentity.ts.
 
+const ACTOR_QUERY_KEY = "actor";
 export function useActor() {
-  // Read identity from the CORRECT custom auth context — NOT from useInternetIdentity
   const { identity } = useAuthContext();
   const queryClient = useQueryClient();
-
   const actorQuery = useQuery<backendInterface>({
     queryKey: [ACTOR_QUERY_KEY, identity?.getPrincipal().toString()],
     queryFn: async () => {
-      if (!identity) {
-        // Anonymous actor for unauthenticated / guest users
+      const isAuthenticated = !!identity;
+
+      if (!isAuthenticated) {
+        // Return anonymous actor for guest mode (Strategy B)
         return await createActorWithConfig();
       }
 
-      const actor = await createActorWithConfig({
-        agentOptions: { identity },
-      });
+      const actorOptions = {
+        agentOptions: {
+          identity,
+        },
+      };
 
-      // Admin bootstrap: ONLY run when an actual admin token is present in the URL.
-      // NEVER call with an empty string — that causes a failing ICP update call that
-      // corrupts the actor and blocks all saves for every authenticated user.
+      const actor = await createActorWithConfig(actorOptions);
+
+      // CRITICAL: Only run the admin bootstrap call when a real token is present.
+      // Calling _initializeAccessControlWithSecret("") with an empty string always
+      // throws an error, which corrupts the actor and causes all saves to fail.
       const adminToken = getSecretParameter("caffeineAdminToken");
       if (adminToken) {
         try {
@@ -45,15 +50,18 @@ export function useActor() {
     enabled: true,
   });
 
-  // When the actor changes (e.g. after login), invalidate all dependent queries
-  // so they refetch with the new authenticated identity.
+  // When the actor changes, invalidate dependent queries so they refetch with new identity
   useEffect(() => {
     if (actorQuery.data) {
       queryClient.invalidateQueries({
-        predicate: (query) => !query.queryKey.includes(ACTOR_QUERY_KEY),
+        predicate: (query) => {
+          return !query.queryKey.includes(ACTOR_QUERY_KEY);
+        },
       });
       queryClient.refetchQueries({
-        predicate: (query) => !query.queryKey.includes(ACTOR_QUERY_KEY),
+        predicate: (query) => {
+          return !query.queryKey.includes(ACTOR_QUERY_KEY);
+        },
       });
     }
   }, [actorQuery.data, queryClient]);

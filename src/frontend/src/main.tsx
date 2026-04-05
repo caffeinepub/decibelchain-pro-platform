@@ -4,11 +4,10 @@ import App from "./App";
 import { AuthProvider } from "./contexts/AuthContext";
 import "./index.css";
 
-// CRITICAL: InternetIdentityProvider is NOT used here.
-// The broken library (useInternetIdentity.ts) caused authClient to be stored in
-// useState with effect deps, creating a re-initialization loop after every login.
-// AuthProvider wraps the correct custom useAuth hook (authClient in a ref, effect
-// runs once, no finally block). DO NOT replace AuthProvider with InternetIdentityProvider.
+// CRITICAL: InternetIdentityProvider is intentionally NOT used here.
+// It stores authClient in useState which causes an infinite re-render loop
+// after every sign-in. AuthProvider uses the custom useAuth hook instead,
+// which stores authClient in a useRef and runs the init effect exactly once.
 
 BigInt.prototype.toJSON = function () {
   return this.toString();
