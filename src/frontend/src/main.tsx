@@ -4,6 +4,12 @@ import App from "./App";
 import { AuthProvider } from "./contexts/AuthContext";
 import "./index.css";
 
+// CRITICAL: InternetIdentityProvider is NOT used here.
+// The broken library (useInternetIdentity.ts) caused authClient to be stored in
+// useState with effect deps, creating a re-initialization loop after every login.
+// AuthProvider wraps the correct custom useAuth hook (authClient in a ref, effect
+// runs once, no finally block). DO NOT replace AuthProvider with InternetIdentityProvider.
+
 BigInt.prototype.toJSON = function () {
   return this.toString();
 };
@@ -16,10 +22,6 @@ declare global {
 
 const queryClient = new QueryClient();
 
-// CRITICAL: AuthProvider is mounted HERE — wrapping the entire app.
-// InternetIdentityProvider from the broken library is NEVER used here.
-// Any regeneration of that library file cannot affect the app because
-// nothing imports it except useInternetIdentity.ts itself (which is now a safe stub).
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
